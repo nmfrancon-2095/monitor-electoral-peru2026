@@ -13,6 +13,7 @@ import streamlit as st
 import pandas as pd
 import requests
 import base64
+import unicodedata
 from difflib import SequenceMatcher
 
 # -------------------------------------------------------
@@ -189,24 +190,56 @@ def _badge_verificacion(estado: str) -> str:
 # -------------------------------------------------------
 # SECTION: Fuzzy match víctima → candidato
 # -------------------------------------------------------
+def _normalizar(texto: str) -> str:
+    """
+    Normaliza texto para comparación fuzzy:
+    - Mayúsculas
+    - Elimina acentos (á→A, é→E, ñ→N, etc.)
+    - Elimina espacios extra
+    Ejemplo: "García López" → "GARCIA LOPEZ"
+    """
+    texto = str(texto).upper().strip()
+    texto = unicodedata.normalize("NFD", texto)
+    texto = texto.encode("ascii", "ignore").decode("ascii")
+    return texto
+
+
 def _similaridad(a: str, b: str) -> float:
-    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+    """Compara dos strings normalizados."""
+    return SequenceMatcher(None, _normalizar(a), _normalizar(b)).ratio()
 
 
 def _buscar_candidato(nombre_victima: str, partido_victima: str,
                       df_candidatos: pd.DataFrame) -> dict:
     """
     Intenta encontrar al candidato correspondiente a una víctima.
-    Retorna dict con: match (bool), confianza, candidato (row o None).
+    Retorna dict con: match (bool), confianza, score, candidato (row o None).
+
+    Fix: busca primero 'nombre_completo' (columna real del maestro electoral),
+    luego cualquier columna con 'nombre' como fallback.
+    La comparación normaliza acentos y mayúsculas antes de comparar.
     """
     if df_candidatos is None or df_candidatos.empty:
         return {"match": False, "confianza": "NO ENCONTRADO", "candidato": None}
 
-    # Columnas esperadas en df_candidatos (del maestro electoral)
-    col_nombre  = next((c for c in df_candidatos.columns
-                        if "nombre" in c.lower() and "candidato" in c.lower()), None)
-    col_partido = next((c for c in df_candidatos.columns
-                        if "partido" in c.lower() or "organización" in c.lower()), None)
+    # Detectar columna de nombre — prioriza 'nombre_completo' (maestro electoral)
+    col_nombre = next(
+        (c for c in df_candidatos.columns if c.lower() == "nombre_completo"),
+        next(
+            (c for c in df_candidatos.columns if "nombre" in c.lower()),
+            None
+        )
+    )
+
+    # Detectar columna de partido — prioriza 'partido' exacto
+    col_partido = next(
+        (c for c in df_candidatos.columns if c.lower() == "partido"),
+        next(
+            (c for c in df_candidatos.columns
+             if "partido" in c.lower() or "organiz" in c.lower()),
+            None
+        )
+    )
 
     if col_nombre is None:
         return {"match": False, "confianza": "NO ENCONTRADO", "candidato": None}
@@ -215,7 +248,7 @@ def _buscar_candidato(nombre_victima: str, partido_victima: str,
     mejor_fila  = None
 
     for _, row in df_candidatos.iterrows():
-        score_nombre = _similaridad(nombre_victima, str(row[col_nombre]))
+        score_nombre  = _similaridad(nombre_victima, str(row[col_nombre]))
         score_partido = 0.0
         if col_partido and pd.notna(partido_victima) and str(partido_victima).strip():
             score_partido = _similaridad(str(partido_victima), str(row[col_partido]))

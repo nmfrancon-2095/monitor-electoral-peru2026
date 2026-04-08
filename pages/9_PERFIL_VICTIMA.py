@@ -143,6 +143,8 @@ with col_fil:
     f_tipo_sel = st.selectbox("Tipo", tipos_filter, label_visibility="collapsed")
 
 # Construir tabla para selección
+# df_joined tiene una fila por víctima × incidente — deduplicamos por víctima
+# para que en la tabla de selección cada persona aparezca una sola vez.
 df_sel = df_joined.copy()
 if busqueda.strip():
     mask = pd.Series(False, index=df_sel.index)
@@ -155,19 +157,35 @@ if busqueda.strip():
 if f_tipo_sel != "Todos" and "tipo_victima" in df_sel.columns:
     df_sel = df_sel[df_sel["tipo_victima"] == f_tipo_sel]
 
-# Tabla de selección
+# Deduplicar: una fila por num_serie_victima (tomar el primer registro de cada una)
+if "num_serie_victima" in df_sel.columns:
+    df_sel_dedup = df_sel.drop_duplicates(subset=["num_serie_victima"], keep="first")
+else:
+    df_sel_dedup = df_sel
+
+# Tabla de selección — columnas de identidad, sin duplicar incidentes
 cols_tabla = [c for c in ["num_serie_victima", "nombre", "tipo_victima",
                            "cargo_postula", "org_politica", "genero",
-                           "num_serie_incidente", "region", "tipo_ataque"]
-              if c in df_sel.columns]
+                           "factor_diferencial"]
+              if c in df_sel_dedup.columns]
 
-df_tabla_show = df_sel[cols_tabla].copy()
-df_tabla_show.columns = [c.replace("_", " ").title() for c in cols_tabla]
+label_map_tabla = {
+    "num_serie_victima": "N\u00b0 v\u00edctima",
+    "nombre":            "Nombre",
+    "tipo_victima":      "Tipo",
+    "cargo_postula":     "Cargo que postula",
+    "org_politica":      "Partido / Movimiento",
+    "genero":            "G\u00e9nero",
+    "factor_diferencial":"Factor diferencial",
+}
+df_tabla_show = df_sel_dedup[cols_tabla].copy().rename(
+    columns={c: label_map_tabla.get(c, c) for c in cols_tabla}
+)
 st.dataframe(df_tabla_show, use_container_width=True, height=240)
 
-# Selector de víctima individual
-victimas_opciones = df_sel["num_serie_victima"].dropna().unique().tolist() \
-                    if "num_serie_victima" in df_sel.columns else []
+# Selector de víctima individual — sobre lista deduplicada
+victimas_opciones = df_sel_dedup["num_serie_victima"].dropna().unique().tolist() \
+                    if "num_serie_victima" in df_sel_dedup.columns else []
 if not victimas_opciones:
     st.info("No se encontraron v\u00edctimas con los criterios aplicados.")
     st.stop()
@@ -339,72 +357,134 @@ with col_incidentes:
         unsafe_allow_html=True,
     )
 
-    for i, (_, row_inc) in enumerate(df_vic_sel.iterrows(), 1):
-        serie_inc = row_inc.get("num_serie", row_inc.get("num_serie_incidente", f"#{i}"))
-        fecha_inc = (row_inc["fecha"].strftime("%d/%m/%Y")
-                     if "fecha" in row_inc and pd.notna(row_inc.get("fecha"))
-                     else "—")
-        tipo_inc  = str(row_inc.get("tipo_ataque") or "—")[:60]
-        region_inc = str(row_inc.get("region") or "Sin regi\u00f3n")
+    if n_inc == 0:
+        st.info("No hay incidentes registrados para esta v\u00edctima.")
+    else:
+        # Tabla resumen de incidentes asociados a esta víctima
+        cols_inc_tabla = [c for c in ["num_serie_incidente", "fecha", "region",
+                                       "tipo_ataque", "autor_tipo", "estado_verificacion"]
+                          if c in df_vic_sel.columns]
+        df_inc_tabla = df_vic_sel[cols_inc_tabla].copy()
+        if "fecha" in df_inc_tabla.columns:
+            df_inc_tabla["fecha"] = pd.to_datetime(
+                df_inc_tabla["fecha"], errors="coerce"
+            ).dt.strftime("%d/%m/%Y")
 
-        with st.expander(
-            f"{serie_inc} \u00b7 {fecha_inc} \u00b7 {region_inc} \u00b7 {tipo_inc}",
-            expanded=(i == 1),
-        ):
-            # Descripción
+        label_map_inc = {
+            "num_serie_incidente": "N\u00b0 incidente",
+            "fecha":               "Fecha",
+            "region":              "Regi\u00f3n",
+            "tipo_ataque":         "Tipo de ataque",
+            "autor_tipo":          "Autor (tipo)",
+            "estado_verificacion": "Verificaci\u00f3n",
+        }
+        st.dataframe(
+            df_inc_tabla.rename(
+                columns={c: label_map_inc.get(c, c) for c in df_inc_tabla.columns}
+            ),
+            use_container_width=True,
+            height=min(120 + n_inc * 35, 280),
+        )
+
+        # Selector de incidente para ver detalle
+        series_inc = df_vic_sel["num_serie_incidente"].dropna().tolist() \
+                     if "num_serie_incidente" in df_vic_sel.columns \
+                     else [f"Incidente #{i+1}" for i in range(n_inc)]
+
+        inc_sel = st.selectbox(
+            "Ver detalle del incidente",
+            options=["— Selecciona un incidente —"] + series_inc,
+            key="inc_detalle_sel",
+        )
+
+        if inc_sel != "— Selecciona un incidente —":
+            # Obtener la fila del incidente seleccionado
+            if "num_serie_incidente" in df_vic_sel.columns:
+                row_inc_match = df_vic_sel[df_vic_sel["num_serie_incidente"] == inc_sel]
+                row_inc = row_inc_match.iloc[0] if not row_inc_match.empty else df_vic_sel.iloc[0]
+            else:
+                row_inc = df_vic_sel.iloc[0]
+
+            st.markdown(
+                "<div style='border-top:1px solid " + COLOR_BORDER + "; margin:14px 0 12px 0;'></div>",
+                unsafe_allow_html=True,
+            )
+
+            # Descripción del incidente
             desc = row_inc.get("descripcion")
-            if pd.notna(desc) and str(desc).strip():
+            if pd.notna(desc) and str(desc).strip() and str(desc) not in ("nan", "None"):
                 st.markdown(
-                    "<div style='font-size:0.83em; color:" + COLOR_TEXT_SECONDARY + ";"
-                    " line-height:1.6; white-space:pre-wrap; margin-bottom:12px;'>"
+                    "<div style='font-size:0.72rem; font-weight:700; letter-spacing:0.06em;"
+                    " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:6px;'>"
+                    "Descripci\u00f3n</div>"
+                    "<div style='font-size:0.84em; color:" + COLOR_TEXT_SECONDARY + ";"
+                    " line-height:1.65; white-space:pre-wrap; margin-bottom:14px;'>"
                     + str(desc) + "</div>",
                     unsafe_allow_html=True,
                 )
 
-            # Metadatos del incidente
+            # Metadatos del incidente en tabla
             campos_inc = [
-                ("Lugar",           "lugar"),
-                ("Provincia",       "provincia"),
-                ("Distrito",        "distrito"),
-                ("Forma de ataque", "forma_ataque"),
-                ("Sub-proceso",     "subproceso_electoral"),
-                ("Autor (tipo)",    "autor_tipo"),
-                ("Autor (subtipo)", "autor_subtipo"),
-                ("Verificaci\u00f3n","estado_verificacion"),
-                ("Objetivo pol\u00edtico", "objetivo_politico"),
-                ("Forma de ataque (v\u00edctima)", "forma_ataque_victima"),
+                ("Lugar",                        "lugar"),
+                ("Provincia",                    "provincia"),
+                ("Distrito",                     "distrito"),
+                ("Forma de ataque",              "forma_ataque"),
+                ("Sub-proceso",                  "subproceso_electoral"),
+                ("Autor (tipo)",                 "autor_tipo"),
+                ("Autor (subtipo)",              "autor_subtipo"),
+                ("N\u00ba agresores",            "num_agresores"),
+                ("Verificaci\u00f3n",            "estado_verificacion"),
+                ("Objetivo pol\u00edtico",       "objetivo_politico"),
+                ("Forma de ataque (v\u00edctima)","forma_ataque_victima"),
             ]
-            html_inc = "<div class='profile-card' style='margin-bottom:10px;'>"
+            filas_inc = ""
             for label, key in campos_inc:
                 val = row_inc.get(key)
                 if pd.notna(val) and str(val).strip() and str(val) not in ("nan", "None"):
-                    html_inc += (
-                        "<div class='profile-field'>"
-                        "<strong>" + label + ":</strong> " + str(val)
-                        + "</div>"
+                    filas_inc += (
+                        "<tr>"
+                        "<td style='color:" + COLOR_TEXT_MUTED + "; padding-right:14px;"
+                        " white-space:nowrap; font-weight:500; padding-bottom:3px;"
+                        " vertical-align:top;'>" + label + "</td>"
+                        "<td style='color:" + COLOR_TEXT_PRIMARY + "; padding-bottom:3px;"
+                        " line-height:1.45;'>" + str(val) + "</td>"
+                        "</tr>"
                     )
-            html_inc += "</div>"
-            st.markdown(html_inc, unsafe_allow_html=True)
+            if filas_inc:
+                st.markdown(
+                    "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
+                    " border-radius:6px; padding:14px 16px; margin-bottom:10px;'>"
+                    "<table style='width:100%; border-collapse:collapse; font-size:0.83rem;'>"
+                    + filas_inc +
+                    "</table></div>",
+                    unsafe_allow_html=True,
+                )
 
             # Fuentes
             fuentes = row_inc.get("fuentes_html", "")
-            if fuentes and fuentes != "Sin fuentes registradas":
+            if fuentes and str(fuentes) not in ("", "Sin fuentes registradas", "nan"):
                 st.markdown(
-                    "<div style='font-size:0.78rem; font-weight:700; letter-spacing:0.06em;"
-                    " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:4px;'>"
+                    "<div style='font-size:0.72rem; font-weight:700; letter-spacing:0.06em;"
+                    " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:6px;'>"
                     "Fuentes</div>"
                     "<div style='font-size:0.82em; color:" + COLOR_TEXT_SECONDARY + "; line-height:1.7;'>"
-                    + fuentes + "</div>",
+                    + str(fuentes) + "</div>",
                     unsafe_allow_html=True,
                 )
 
             # Seguimiento OACNUDH
             seg = row_inc.get("acciones_seguimiento")
-            if pd.notna(seg) and str(seg).strip():
+            if pd.notna(seg) and str(seg).strip() and str(seg) not in ("nan", "None"):
                 st.markdown(
-                    "<div class='nota-info' style='margin-top:8px;'>"
-                    "<strong>Seguimiento OACNUDH:</strong> " + str(seg)
-                    + "</div>",
+                    "<div style='background:" + COLOR_RIESGO_BAJO_BG + ";"
+                    " border-left:3px solid " + COLOR_RIESGO_BAJO + ";"
+                    " border-radius:0 6px 6px 0; padding:12px 14px; margin-top:10px;'>"
+                    "<div style='font-size:0.68rem; font-weight:700; letter-spacing:0.06em;"
+                    " text-transform:uppercase; color:" + COLOR_RIESGO_BAJO + "; margin-bottom:4px;'>"
+                    "Seguimiento OACNUDH</div>"
+                    "<div style='font-size:0.83em; color:" + COLOR_TEXT_SECONDARY + "; line-height:1.5;'>"
+                    + str(seg) + "</div>"
+                    "</div>",
                     unsafe_allow_html=True,
                 )
 
