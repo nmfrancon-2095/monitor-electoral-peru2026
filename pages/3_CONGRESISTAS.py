@@ -521,7 +521,7 @@ if selected:
 
         with tab_todo:
             st.dataframe(
-                df_votos_perfil[COLS_VOTO_DISPLAY].style.applymap(highlight_voto, subset=["Voto"]),
+                df_votos_perfil[COLS_VOTO_DISPLAY].style.map(highlight_voto, subset=["Voto"]),
                 hide_index=True, use_container_width=True, height=380,
             )
         with tab_afavor:
@@ -530,7 +530,7 @@ if selected:
                 st.info("Este congresista no registra votos 'A favor' en las leyes analizadas.")
             else:
                 st.dataframe(
-                    df_solo_favor[COLS_VOTO_DISPLAY].style.applymap(highlight_voto, subset=["Voto"]),
+                    df_solo_favor[COLS_VOTO_DISPLAY].style.map(highlight_voto, subset=["Voto"]),
                     hide_index=True, use_container_width=True,
                     height=min(80 + len(df_solo_favor) * 36, 380),
                 )
