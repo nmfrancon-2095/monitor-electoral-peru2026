@@ -315,10 +315,13 @@ grid_resp = AgGrid(
 # -------------------------------------------------------
 # SECTION: Panel de perfil del congresista seleccionado
 # -------------------------------------------------------
-selected = grid_resp.get("selected_rows")
-if selected is not None:
-    if hasattr(selected, "empty"):
-        selected = [] if selected.empty else selected.to_dict("records")
+selected_raw = grid_resp.get("selected_rows")
+if selected_raw is None:
+    selected = []
+elif hasattr(selected_raw, "empty"):
+    selected = [] if selected_raw.empty else selected_raw.to_dict("records")
+else:
+    selected = list(selected_raw) if selected_raw else []
 
 if selected:
     nombre_sel = selected[0].get("nombre_display", "")
