@@ -592,7 +592,7 @@ if selected:
                 return f"background-color:{bg}; color:{text}; font-weight:600;"
 
             st.dataframe(
-                df_votos_perfil.style.applymap(highlight_voto, subset=["Voto"]),
+                df_votos_perfil.style.map(highlight_voto, subset=["Voto"]),
                 hide_index=True,
                 use_container_width=True,
                 height=340,
