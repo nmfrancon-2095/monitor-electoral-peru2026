@@ -143,8 +143,10 @@ with col_fil:
     f_tipo_sel = st.selectbox("Tipo", tipos_filter, label_visibility="collapsed")
 
 # Construir tabla para selección
-# df_joined tiene una fila por víctima × incidente — deduplicamos por víctima
-# para que en la tabla de selección cada persona aparezca una sola vez.
+# df_joined tiene una fila por víctima × incidente.
+# Una misma persona puede tener varias filas con distinto num_serie_victima
+# (ActivityInfo crea una entrada de víctima por incidente).
+# Agrupamos por nombre para que el selector muestre una entrada por persona.
 df_sel = df_joined.copy()
 if busqueda.strip():
     mask = pd.Series(False, index=df_sel.index)
@@ -157,51 +159,59 @@ if busqueda.strip():
 if f_tipo_sel != "Todos" and "tipo_victima" in df_sel.columns:
     df_sel = df_sel[df_sel["tipo_victima"] == f_tipo_sel]
 
-# Deduplicar: una fila por num_serie_victima (tomar el primer registro de cada una)
-if "num_serie_victima" in df_sel.columns:
-    df_sel_dedup = df_sel.drop_duplicates(subset=["num_serie_victima"], keep="first")
-else:
-    df_sel_dedup = df_sel
+# Construir etiqueta de display: nombre si existe, sino num_serie_victima
+def _label_victima(row) -> str:
+    nombre = str(row.get("nombre", "") or "").strip()
+    if nombre and nombre not in ("nan", "None", "Presunta v\u00edctima"):
+        return nombre
+    return "Serie " + str(row.get("num_serie_victima", "—"))
 
-# Tabla de selección — columnas de identidad, sin duplicar incidentes
-cols_tabla = [c for c in ["num_serie_victima", "nombre", "tipo_victima",
-                           "cargo_postula", "org_politica", "genero",
-                           "factor_diferencial"]
+df_sel = df_sel.copy()
+df_sel["_label"] = df_sel.apply(_label_victima, axis=1)
+
+# Deduplicar por etiqueta para la tabla de selección (una fila por persona/org)
+df_sel_dedup = df_sel.drop_duplicates(subset=["_label"], keep="first")
+
+# Tabla de selección — columnas de identidad
+cols_tabla = [c for c in ["_label", "tipo_victima", "cargo_postula",
+                           "org_politica", "genero", "factor_diferencial"]
               if c in df_sel_dedup.columns]
 
 label_map_tabla = {
-    "num_serie_victima": "N\u00b0 v\u00edctima",
-    "nombre":            "Nombre",
-    "tipo_victima":      "Tipo",
-    "cargo_postula":     "Cargo que postula",
-    "org_politica":      "Partido / Movimiento",
-    "genero":            "G\u00e9nero",
-    "factor_diferencial":"Factor diferencial",
+    "_label":           "Nombre / ID",
+    "tipo_victima":     "Tipo",
+    "cargo_postula":    "Cargo que postula",
+    "org_politica":     "Partido / Movimiento",
+    "genero":           "G\u00e9nero",
+    "factor_diferencial": "Factor diferencial",
 }
 df_tabla_show = df_sel_dedup[cols_tabla].copy().rename(
     columns={c: label_map_tabla.get(c, c) for c in cols_tabla}
 )
 st.dataframe(df_tabla_show, use_container_width=True, height=240)
 
-# Selector de víctima individual — sobre lista deduplicada
-victimas_opciones = df_sel_dedup["num_serie_victima"].dropna().unique().tolist() \
-                    if "num_serie_victima" in df_sel_dedup.columns else []
+# Selector — muestra nombre o ID, ordenado alfabéticamente
+victimas_opciones = sorted(df_sel_dedup["_label"].dropna().unique().tolist())
 if not victimas_opciones:
     st.info("No se encontraron v\u00edctimas con los criterios aplicados.")
     st.stop()
 
-serie_sel = st.selectbox(
+label_sel = st.selectbox(
     "Selecciona una v\u00edctima para ver su ficha completa",
-    victimas_opciones,
+    options=["— Selecciona —"] + victimas_opciones,
 )
 
-# Obtener TODOS los registros de esta víctima (puede tener varios incidentes)
-df_vic_sel = df_joined[df_joined["num_serie_victima"] == serie_sel]
+if label_sel == "— Selecciona —":
+    st.stop()
+
+# Obtener TODOS los registros de esta víctima/organización
+# (puede tener varios num_serie_victima si tuvo múltiples incidentes)
+df_vic_sel = df_joined[df_joined.apply(_label_victima, axis=1) == label_sel]
 if df_vic_sel.empty:
     st.warning("No se encontr\u00f3 informaci\u00f3n para esta v\u00edctima.")
     st.stop()
 
-# Datos base de la víctima (primer registro, la información personal no varía)
+# Datos base: primer registro (la información personal no varía entre filas)
 row_vic = df_vic_sel.iloc[0]
 
 # -------------------------------------------------------
@@ -360,9 +370,10 @@ with col_incidentes:
     if n_inc == 0:
         st.info("No hay incidentes registrados para esta v\u00edctima.")
     else:
-        # Tabla resumen de incidentes asociados a esta víctima
-        cols_inc_tabla = [c for c in ["num_serie_incidente", "fecha", "region",
-                                       "tipo_ataque", "autor_tipo", "estado_verificacion"]
+        # Tabla resumen de todos los incidentes de esta víctima
+        cols_inc_tabla = [c for c in ["num_serie_victima", "num_serie_incidente",
+                                       "fecha", "region", "tipo_ataque",
+                                       "autor_tipo", "estado_verificacion"]
                           if c in df_vic_sel.columns]
         df_inc_tabla = df_vic_sel[cols_inc_tabla].copy()
         if "fecha" in df_inc_tabla.columns:
@@ -371,6 +382,7 @@ with col_incidentes:
             ).dt.strftime("%d/%m/%Y")
 
         label_map_inc = {
+            "num_serie_victima":   "N\u00b0 v\u00edctima",
             "num_serie_incidente": "N\u00b0 incidente",
             "fecha":               "Fecha",
             "region":              "Regi\u00f3n",
@@ -386,24 +398,34 @@ with col_incidentes:
             height=min(120 + n_inc * 35, 280),
         )
 
-        # Selector de incidente para ver detalle
-        series_inc = df_vic_sel["num_serie_incidente"].dropna().tolist() \
-                     if "num_serie_incidente" in df_vic_sel.columns \
-                     else [f"Incidente #{i+1}" for i in range(n_inc)]
+        # Construir opciones para el selectbox de incidentes
+        # Etiqueta: "Nº incidente · fecha · región" para que sea descriptiva
+        def _label_inc(row) -> str:
+            serie = str(row.get("num_serie_incidente") or "—")
+            fecha = ""
+            if pd.notna(row.get("fecha")):
+                try:
+                    fecha = " \u00b7 " + pd.to_datetime(row["fecha"]).strftime("%d/%m/%Y")
+                except Exception:
+                    pass
+            region = str(row.get("region") or "")
+            region = (" \u00b7 " + region) if region and region not in ("nan", "None") else ""
+            return serie + fecha + region
+
+        opciones_inc = [_label_inc(row) for _, row in df_vic_sel.iterrows()]
+        # Guardar mapeo etiqueta → índice de fila
+        opciones_con_placeholder = ["— Selecciona un incidente —"] + opciones_inc
 
         inc_sel = st.selectbox(
             "Ver detalle del incidente",
-            options=["— Selecciona un incidente —"] + series_inc,
+            options=opciones_con_placeholder,
             key="inc_detalle_sel",
         )
 
         if inc_sel != "— Selecciona un incidente —":
-            # Obtener la fila del incidente seleccionado
-            if "num_serie_incidente" in df_vic_sel.columns:
-                row_inc_match = df_vic_sel[df_vic_sel["num_serie_incidente"] == inc_sel]
-                row_inc = row_inc_match.iloc[0] if not row_inc_match.empty else df_vic_sel.iloc[0]
-            else:
-                row_inc = df_vic_sel.iloc[0]
+            # Recuperar la fila correspondiente por posición en la lista
+            idx_inc = opciones_inc.index(inc_sel)
+            row_inc = df_vic_sel.iloc[idx_inc]
 
             st.markdown(
                 "<div style='border-top:1px solid " + COLOR_BORDER + "; margin:14px 0 12px 0;'></div>",
@@ -425,16 +447,16 @@ with col_incidentes:
 
             # Metadatos del incidente en tabla
             campos_inc = [
-                ("Lugar",                        "lugar"),
-                ("Provincia",                    "provincia"),
-                ("Distrito",                     "distrito"),
-                ("Forma de ataque",              "forma_ataque"),
-                ("Sub-proceso",                  "subproceso_electoral"),
-                ("Autor (tipo)",                 "autor_tipo"),
-                ("Autor (subtipo)",              "autor_subtipo"),
-                ("N\u00ba agresores",            "num_agresores"),
-                ("Verificaci\u00f3n",            "estado_verificacion"),
-                ("Objetivo pol\u00edtico",       "objetivo_politico"),
+                ("Lugar",                         "lugar"),
+                ("Provincia",                     "provincia"),
+                ("Distrito",                      "distrito"),
+                ("Forma de ataque",               "forma_ataque"),
+                ("Sub-proceso",                   "subproceso_electoral"),
+                ("Autor (tipo)",                  "autor_tipo"),
+                ("Autor (subtipo)",               "autor_subtipo"),
+                ("N\u00ba agresores",             "num_agresores"),
+                ("Verificaci\u00f3n",             "estado_verificacion"),
+                ("Objetivo pol\u00edtico",        "objetivo_politico"),
                 ("Forma de ataque (v\u00edctima)","forma_ataque_victima"),
             ]
             filas_inc = ""
