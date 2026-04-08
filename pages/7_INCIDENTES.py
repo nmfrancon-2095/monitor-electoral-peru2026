@@ -50,7 +50,7 @@ if not st.session_state.get(_VIO_KEY, False):
         " border-radius:10px; text-align:center;'>"
         "<div style='font-size:0.65rem; font-weight:700; letter-spacing:0.12em;"
         " text-transform:uppercase; color:" + COLOR_RIESGO_ALTO + "; margin-bottom:14px;'>"
-        "Acceso restringido — M\u00f3dulo confidencial</div>"
+        "Acceso restringido \u2014 M\u00f3dulo confidencial</div>"
         "<div style='font-size:1rem; font-weight:700; color:" + COLOR_TEXT_PRIMARY + "; margin-bottom:8px;'>"
         "Violencia Electoral</div>"
         "<div style='font-size:0.82em; color:" + COLOR_TEXT_SECONDARY + "; margin-bottom:0;'>"
@@ -184,7 +184,16 @@ _kpi(k5, "Regiones afectadas",
 st.markdown("<div style='margin-top:24px;'></div>", unsafe_allow_html=True)
 
 # -------------------------------------------------------
-# SECTION: Fila 1 — línea de tiempo + tipo de ataque
+# SECTION: Helper — layout base sin fondo para gráficos
+# Sobreescribe paper_bgcolor y plot_bgcolor de CHART_LAYOUT_BASE
+# para que los gráficos floten sobre el fondo de la página.
+# -------------------------------------------------------
+_LAYOUT_TRANSP = {k: v for k, v in CHART_LAYOUT_BASE.items()}
+_LAYOUT_TRANSP["paper_bgcolor"] = "rgba(0,0,0,0)"
+_LAYOUT_TRANSP["plot_bgcolor"]  = "rgba(0,0,0,0)"
+
+# -------------------------------------------------------
+# SECTION: Fila 1 — línea de tiempo + sub-proceso electoral
 # -------------------------------------------------------
 row1_l, row1_r = st.columns([3, 2], gap="medium")
 
@@ -202,14 +211,19 @@ with row1_l:
         fig_tiempo = px.bar(
             df_tiempo, x="semana", y="n",
             color_discrete_sequence=[COLOR_PRIMARY],
+            text="n",
         )
         fig_tiempo.update_layout(
-            **{k: v for k, v in CHART_LAYOUT_BASE.items()},
+            **_LAYOUT_TRANSP,
             height=CHART_HEIGHT_SMALL,
             xaxis_title=None, yaxis_title="Incidentes",
             bargap=0.25,
         )
-        fig_tiempo.update_traces(marker_line_width=0)
+        fig_tiempo.update_traces(
+            marker_line_width=0,
+            textposition="outside",
+            textfont_size=10,
+        )
         st.plotly_chart(fig_tiempo, use_container_width=True)
     else:
         st.info("Sin datos de fecha disponibles.")
@@ -227,17 +241,22 @@ with row1_r:
             df_sub.sort_values("n"),
             x="n", y="subproceso", orientation="h",
             color_discrete_sequence=[COLOR_ACCENT],
+            text="n",
         )
         fig_sub.update_layout(
-            **{k: v for k, v in CHART_LAYOUT_BASE.items()},
+            **_LAYOUT_TRANSP,
             height=CHART_HEIGHT_SMALL,
             xaxis_title="Incidentes", yaxis_title=None,
         )
-        fig_sub.update_traces(marker_line_width=0)
+        fig_sub.update_traces(
+            marker_line_width=0,
+            textposition="outside",
+            textfont_size=10,
+        )
         st.plotly_chart(fig_sub, use_container_width=True)
 
 # -------------------------------------------------------
-# SECTION: Fila 2 — tipo de ataque (explode) + forma de ataque
+# SECTION: Fila 2 — tipos de ataque (explode) + forma de ataque (barras verticales)
 # -------------------------------------------------------
 row2_l, row2_r = st.columns([2, 2], gap="medium")
 
@@ -255,13 +274,18 @@ with row2_l:
             df_tipos.sort_values("n"),
             x="n", y="tipo", orientation="h",
             color_discrete_sequence=[COLOR_PRIMARY],
+            text="n",
         )
         fig_tipos.update_layout(
-            **{k: v for k, v in CHART_LAYOUT_BASE.items()},
+            **_LAYOUT_TRANSP,
             height=max(280, len(df_tipos) * 28 + 60),
             xaxis_title="Frecuencia", yaxis_title=None,
         )
-        fig_tipos.update_traces(marker_line_width=0)
+        fig_tipos.update_traces(
+            marker_line_width=0,
+            textposition="outside",
+            textfont_size=10,
+        )
         st.plotly_chart(fig_tipos, use_container_width=True)
 
 with row2_r:
@@ -274,28 +298,34 @@ with row2_r:
         serie_forma = _explode_multiselect(df_f, "forma_ataque")
         df_forma = serie_forma.value_counts().reset_index()
         df_forma.columns = ["forma", "n"]
-        total_forma = df_forma["n"].sum()
-        df_forma["pct"] = (df_forma["n"] / total_forma * 100).round(1)
 
-        fig_forma = px.pie(
-            df_forma, names="forma", values="n",
-            color_discrete_sequence=[
-                COLOR_PRIMARY, COLOR_ACCENT, "#4A9BD4", "#6B4FA0",
-                COLOR_RIESGO_ALTO, COLOR_RIESGO_MEDIO, "#1E8A4A",
-            ],
-            hole=0.45,
+        # CAMBIO: pie chart → barras verticales (mejor comparabilidad entre categorías)
+        fig_forma = px.bar(
+            df_forma.sort_values("n", ascending=False),
+            x="forma", y="n",
+            color_discrete_sequence=[COLOR_ACCENT],
+            text="n",
         )
         fig_forma.update_layout(
-            **{k: v for k, v in CHART_LAYOUT_BASE.items()},
+            **_LAYOUT_TRANSP,
             height=CHART_HEIGHT_SMALL,
-            showlegend=True,
+            xaxis_title=None,
+            yaxis_title="Frecuencia",
+            xaxis=dict(
+                tickangle=-30,
+                tickfont=dict(size=10),
+                showgrid=False,
+            ),
         )
-        fig_forma.update_traces(textposition="inside", textinfo="percent+label",
-                                textfont_size=11)
+        fig_forma.update_traces(
+            marker_line_width=0,
+            textposition="outside",
+            textfont_size=10,
+        )
         st.plotly_chart(fig_forma, use_container_width=True)
 
 # -------------------------------------------------------
-# SECTION: Fila 3 — presunto autor + región
+# SECTION: Fila 3 — presunto autor + distribución regional
 # -------------------------------------------------------
 row3_l, row3_r = st.columns([2, 2], gap="medium")
 
@@ -309,26 +339,30 @@ with row3_l:
         df_autor = df_f["autor_tipo"].value_counts().reset_index()
         df_autor.columns = ["tipo", "n"]
         color_map = {
-            "Estado":                    COLOR_RIESGO_ALTO,
-            "Actor pol\u00edtico":       COLOR_RIESGO_MEDIO,
-            "Candidato":                 COLOR_RIESGO_MEDIO,
-            "Candidato a la presidencia":COLOR_RIESGO_MEDIO,
-            "Privado":                   COLOR_ACCENT,
+            "Estado":                     COLOR_RIESGO_ALTO,
+            "Actor pol\u00edtico":        COLOR_RIESGO_MEDIO,
+            "Candidato":                  COLOR_RIESGO_MEDIO,
+            "Candidato a la presidencia": COLOR_RIESGO_MEDIO,
+            "Privado":                    COLOR_ACCENT,
         }
-        df_autor["color"] = df_autor["tipo"].map(color_map).fillna(COLOR_TEXT_MUTED)
         fig_autor = px.bar(
             df_autor.sort_values("n"),
             x="n", y="tipo", orientation="h",
             color="tipo",
             color_discrete_map=color_map,
+            text="n",
         )
         fig_autor.update_layout(
-            **{k: v for k, v in CHART_LAYOUT_BASE.items()},
+            **_LAYOUT_TRANSP,
             height=CHART_HEIGHT_SMALL,
             showlegend=False,
             xaxis_title="Incidentes", yaxis_title=None,
         )
-        fig_autor.update_traces(marker_line_width=0)
+        fig_autor.update_traces(
+            marker_line_width=0,
+            textposition="outside",
+            textfont_size=10,
+        )
         st.plotly_chart(fig_autor, use_container_width=True)
 
 with row3_r:
@@ -344,13 +378,18 @@ with row3_r:
             df_reg.sort_values("n"),
             x="n", y="region", orientation="h",
             color_discrete_sequence=["#4A9BD4"],
+            text="n",
         )
         fig_reg.update_layout(
-            **{k: v for k, v in CHART_LAYOUT_BASE.items()},
+            **_LAYOUT_TRANSP,
             height=CHART_HEIGHT_SMALL,
             xaxis_title="Incidentes", yaxis_title=None,
         )
-        fig_reg.update_traces(marker_line_width=0)
+        fig_reg.update_traces(
+            marker_line_width=0,
+            textposition="outside",
+            textfont_size=10,
+        )
         st.plotly_chart(fig_reg, use_container_width=True)
 
         sin_geo = df_f["region"].isna().sum()
@@ -358,21 +397,30 @@ with row3_r:
             st.markdown(
                 "<div class='nota-info'>"
                 + str(sin_geo)
-                + " incidentes sin regi\u00f3n registrada (incidentes online o ubicaci\u00f3n no disponible)."
+                + " incidentes sin regi\u00f3n registrada"
+                " (incidentes online o ubicaci\u00f3n no disponible)."
                 + "</div>",
                 unsafe_allow_html=True,
             )
 
 # -------------------------------------------------------
-# SECTION: Tabla de incidentes con fuentes
+# SECTION: Listado de incidentes — tabla clickeable + panel de detalle
+#
+# Patrón idéntico a 2_CANDIDATOS.py:
+#   1. Tabla con st.dataframe y columna "num_serie" como selector
+#   2. st.selectbox para elegir el incidente
+#   3. Panel de detalle se despliega debajo al seleccionar
 # -------------------------------------------------------
 st.markdown("<div style='margin-top:12px;'></div>", unsafe_allow_html=True)
 st.markdown(
     "<div class='section-header'>Listado de incidentes</div>"
-    "<div class='section-subheader'>Todos los incidentes registrados con acceso a fuentes</div>",
+    "<div class='section-subheader'>"
+    "Selecciona un incidente de la tabla para ver su ficha completa"
+    "</div>",
     unsafe_allow_html=True,
 )
 
+# Construir tabla de selección
 cols_tabla = [c for c in ["num_serie", "fecha", "region", "tipo_ataque",
                            "forma_ataque", "subproceso_electoral",
                            "autor_tipo", "estado_verificacion"]
@@ -382,78 +430,164 @@ df_tabla = df_f[cols_tabla].copy()
 if "fecha" in df_tabla.columns:
     df_tabla["fecha"] = df_tabla["fecha"].dt.strftime("%d/%m/%Y")
 
-df_tabla.columns = [c.replace("_", " ").title() for c in df_tabla.columns]
-st.dataframe(df_tabla, use_container_width=True, height=320)
+# Labels de columna legibles
+label_map = {
+    "num_serie":            "N\u00b0 serie",
+    "fecha":                "Fecha",
+    "region":               "Regi\u00f3n",
+    "tipo_ataque":          "Tipo de ataque",
+    "forma_ataque":         "Forma",
+    "subproceso_electoral": "Sub-proceso",
+    "autor_tipo":           "Autor (tipo)",
+    "estado_verificacion":  "Verificaci\u00f3n",
+}
+df_tabla = df_tabla.rename(columns={c: label_map.get(c, c) for c in df_tabla.columns})
+st.dataframe(df_tabla, use_container_width=True, height=300)
 
-# Expanders por incidente con fuentes y descripción
-st.markdown(
-    "<div class='section-header' style='margin-top:20px;'>Fichas de incidente</div>"
-    "<div class='section-subheader'>Descripci\u00f3n completa y fuentes de cada incidente</div>",
-    unsafe_allow_html=True,
-)
+# Selector de incidente (usa num_serie como clave)
+series_disponibles = df_f["num_serie"].dropna().unique().tolist() \
+    if "num_serie" in df_f.columns else []
 
-for _, row in df_f.iterrows():
-    serie  = row.get("num_serie", "—")
-    fecha  = row["fecha"].strftime("%d/%m/%Y") if pd.notna(row.get("fecha")) else "—"
-    region = row.get("region", "—") or "Sin regi\u00f3n"
-    tipo   = row.get("tipo_ataque", "—") or "—"
+if not series_disponibles:
+    st.info("No hay incidentes disponibles con los filtros aplicados.")
+else:
+    # Inicializar sesión si no existe
+    if "incidente_sel" not in st.session_state:
+        st.session_state["incidente_sel"] = None
 
-    with st.expander(f"{serie} \u00b7 {fecha} \u00b7 {region} \u00b7 {tipo}"):
-        col_desc, col_meta = st.columns([3, 2], gap="medium")
-        with col_desc:
+    serie_sel = st.selectbox(
+        "Selecciona un incidente para ver su ficha completa",
+        options=["— Selecciona un incidente —"] + series_disponibles,
+        key="incidente_sel_box",
+    )
+
+    # -------------------------------------------------------
+    # SECTION: Panel de ficha de incidente
+    # Se despliega debajo de la tabla al seleccionar un número de serie.
+    # -------------------------------------------------------
+    if serie_sel != "— Selecciona un incidente —":
+        row_sel = df_f[df_f["num_serie"] == serie_sel]
+        if row_sel.empty:
+            st.warning("No se encontraron datos para este incidente.")
+        else:
+            row = row_sel.iloc[0]
+
+            fecha_disp  = row["fecha"].strftime("%d/%m/%Y") \
+                          if pd.notna(row.get("fecha")) else "\u2014"
+            region_disp = str(row.get("region") or "Sin regi\u00f3n registrada")
+            tipo_disp   = str(row.get("tipo_ataque") or "\u2014")
+
             st.markdown(
-                "<div style='font-size:0.78rem; font-weight:700; letter-spacing:0.06em;"
-                " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:6px;'>"
-                "Descripci\u00f3n</div>"
-                "<div style='font-size:0.85em; color:" + COLOR_TEXT_SECONDARY + ";"
-                " line-height:1.6; white-space:pre-wrap;'>"
-                + (str(row.get("descripcion") or "Sin descripci\u00f3n registrada"))
-                + "</div>",
+                "<div style='border-top:2px solid " + COLOR_BORDER + "; margin:24px 0 20px 0;'></div>",
                 unsafe_allow_html=True,
             )
+
+            # Encabezado del incidente
             st.markdown(
-                "<div style='margin-top:12px; font-size:0.78rem; font-weight:700;"
-                " letter-spacing:0.06em; text-transform:uppercase; color:" + COLOR_TEXT_MUTED + ";"
-                " margin-bottom:6px;'>Fuentes</div>"
-                "<div style='font-size:0.83em; color:" + COLOR_TEXT_SECONDARY + "; line-height:1.7;'>"
-                + row.get("fuentes_html", "Sin fuentes")
-                + "</div>",
+                "<div style='margin-bottom:20px;'>"
+                "<div style='font-size:0.63rem; font-weight:700; letter-spacing:0.12em;"
+                " text-transform:uppercase; color:" + COLOR_ACCENT + "; margin-bottom:6px;'>"
+                "Ficha del incidente</div>"
+                "<div style='font-size:1.35rem; font-weight:700; color:" + COLOR_TEXT_PRIMARY + ";"
+                " margin:0 0 4px 0; letter-spacing:-0.02em; line-height:1.2;'>"
+                + str(serie_sel) + " \u00b7 " + fecha_disp + "</div>"
+                "<div style='font-size:0.85rem; color:" + COLOR_TEXT_SECONDARY + "; margin:0;'>"
+                + region_disp + " \u00b7 " + tipo_disp
+                + "</div>"
+                "</div>",
                 unsafe_allow_html=True,
             )
-        with col_meta:
-            campos = [
-                ("Lugar",          row.get("lugar")),
-                ("Provincia",      row.get("provincia")),
-                ("Distrito",       row.get("distrito")),
-                ("Forma de ataque",row.get("forma_ataque")),
-                ("Proceso",        row.get("proceso_electoral")),
-                ("Sub-proceso",    row.get("subproceso_electoral")),
-                ("Autor (tipo)",   row.get("autor_tipo")),
-                ("Autor (subtipo)",row.get("autor_subtipo")),
-                ("N\u00b0 agresores",  row.get("num_agresores")),
-                ("Verificaci\u00f3n",  row.get("estado_verificacion")),
-            ]
-            html = "<div class='profile-card'>"
-            for label, val in campos:
-                if pd.notna(val) and str(val).strip() and str(val) != "nan":
-                    html += (
-                        "<div class='profile-field'>"
-                        "<strong>" + label + ":</strong> " + str(val)
-                        + "</div>"
-                    )
-            seguimiento = row.get("acciones_seguimiento")
-            if pd.notna(seguimiento) and str(seguimiento).strip():
-                html += (
-                    "<div style='margin-top:10px; padding-top:10px;"
-                    " border-top:1px solid " + COLOR_BORDER + ";'>"
-                    "<div style='font-size:0.72rem; font-weight:700; letter-spacing:0.06em;"
-                    " text-transform:uppercase; color:" + COLOR_ACCENT + "; margin-bottom:4px;'>"
-                    "Seguimiento OACNUDH</div>"
-                    "<div class='profile-field'>" + str(seguimiento) + "</div>"
-                    "</div>"
+
+            col_desc, col_meta = st.columns([3, 2], gap="medium")
+
+            # --- Descripción y fuentes ---
+            with col_desc:
+                descripcion = str(row.get("descripcion") or "Sin descripci\u00f3n registrada.")
+                st.markdown(
+                    "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
+                    " border-radius:8px; padding:20px 22px;'>"
+                    "<div style='font-size:0.60rem; font-weight:700; letter-spacing:0.10em;"
+                    " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:10px;'>"
+                    "Descripci\u00f3n de los hechos</div>"
+                    "<div style='font-size:0.85em; color:" + COLOR_TEXT_SECONDARY + ";"
+                    " line-height:1.65; white-space:pre-wrap;'>"
+                    + descripcion
+                    + "</div>"
+                    "</div>",
+                    unsafe_allow_html=True,
                 )
-            html += "</div>"
-            st.markdown(html, unsafe_allow_html=True)
+                st.markdown("<div style='margin-top:12px;'></div>", unsafe_allow_html=True)
+                fuentes_html = row.get("fuentes_html", "Sin fuentes registradas.")
+                st.markdown(
+                    "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
+                    " border-radius:8px; padding:18px 22px;'>"
+                    "<div style='font-size:0.60rem; font-weight:700; letter-spacing:0.10em;"
+                    " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:10px;'>"
+                    "Fuentes</div>"
+                    "<div style='font-size:0.83em; color:" + COLOR_TEXT_SECONDARY + "; line-height:1.7;'>"
+                    + fuentes_html
+                    + "</div>"
+                    "</div>",
+                    unsafe_allow_html=True,
+                )
+
+            # --- Metadatos y seguimiento ---
+            with col_meta:
+                campos_meta = [
+                    ("Lugar",            row.get("lugar")),
+                    ("Provincia",        row.get("provincia")),
+                    ("Distrito",         row.get("distrito")),
+                    ("Forma de ataque",  row.get("forma_ataque")),
+                    ("Proceso",          row.get("proceso_electoral")),
+                    ("Sub-proceso",      row.get("subproceso_electoral")),
+                    ("Autor (tipo)",     row.get("autor_tipo")),
+                    ("Autor (subtipo)",  row.get("autor_subtipo")),
+                    ("N\u00b0 agresores", row.get("num_agresores")),
+                    ("Verificaci\u00f3n", row.get("estado_verificacion")),
+                ]
+                filas_meta = ""
+                for label, val in campos_meta:
+                    if pd.notna(val) and str(val).strip() and str(val) not in ("nan", "None"):
+                        filas_meta += (
+                            "<tr>"
+                            "<td style='color:" + COLOR_TEXT_MUTED + "; padding-right:14px;"
+                            " white-space:nowrap; font-weight:500; padding-bottom:4px;"
+                            " vertical-align:top;'>" + label + "</td>"
+                            "<td style='color:" + COLOR_TEXT_PRIMARY + "; padding-bottom:4px;"
+                            " line-height:1.45;'>" + str(val) + "</td>"
+                            "</tr>"
+                        )
+
+                st.markdown(
+                    "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
+                    " border-radius:8px; padding:20px 22px;'>"
+                    "<div style='font-size:0.60rem; font-weight:700; letter-spacing:0.10em;"
+                    " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:14px;'>"
+                    "Datos del incidente</div>"
+                    "<table style='width:100%; border-collapse:collapse; font-size:0.84rem; line-height:1.7;'>"
+                    + filas_meta +
+                    "</table>"
+                    "</div>",
+                    unsafe_allow_html=True,
+                )
+
+                # Seguimiento OACNUDH (si existe)
+                seguimiento = row.get("acciones_seguimiento")
+                if pd.notna(seguimiento) and str(seguimiento).strip():
+                    st.markdown("<div style='margin-top:12px;'></div>", unsafe_allow_html=True)
+                    st.markdown(
+                        "<div style='background:" + COLOR_RIESGO_BAJO_BG + ";"
+                        " border-left:3px solid " + COLOR_RIESGO_BAJO + ";"
+                        " border-radius:0 6px 6px 0; padding:14px 16px;'>"
+                        "<div style='font-size:0.60rem; font-weight:700; letter-spacing:0.10em;"
+                        " text-transform:uppercase; color:" + COLOR_RIESGO_BAJO + "; margin-bottom:6px;'>"
+                        "Seguimiento OACNUDH</div>"
+                        "<div style='font-size:0.83em; color:" + COLOR_TEXT_SECONDARY + "; line-height:1.55;'>"
+                        + str(seguimiento) +
+                        "</div>"
+                        "</div>",
+                        unsafe_allow_html=True,
+                    )
 
 # -------------------------------------------------------
 # SECTION: Footer
