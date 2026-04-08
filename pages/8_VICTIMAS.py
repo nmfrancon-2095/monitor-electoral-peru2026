@@ -137,11 +137,11 @@ def _kpi(col, label, value, sub=None, color=COLOR_TEXT_PRIMARY):
             unsafe_allow_html=True,
         )
 
-n_vf          = len(df_vf)
-n_candidatas  = df_vf["es_candidata"].sum()  if "es_candidata"          in df_vf.columns else 0
-n_vbg         = df_vf["tiene_vbg"].sum()      if "tiene_vbg"             in df_vf.columns else 0
-n_factor      = df_vf["tiene_factor_diferencial"].sum() \
-                if "tiene_factor_diferencial" in df_vf.columns else 0
+n_vf           = len(df_vf)
+n_candidatas   = df_vf["es_candidata"].sum()  if "es_candidata"          in df_vf.columns else 0
+n_vbg          = df_vf["tiene_vbg"].sum()      if "tiene_vbg"             in df_vf.columns else 0
+n_factor       = df_vf["tiene_factor_diferencial"].sum() \
+                 if "tiene_factor_diferencial" in df_vf.columns else 0
 n_sin_denuncia = (df_vf["instancia_denuncia"] == "No se ha hecho una denuncia/reporte formal").sum() \
                   if "instancia_denuncia" in df_vf.columns else 0
 
@@ -158,6 +158,13 @@ _kpi(k5, "Sin denuncia formal", n_sin_denuncia,
      COLOR_RIESGO_MEDIO)
 
 st.markdown("<div style='margin-top:24px;'></div>", unsafe_allow_html=True)
+
+# -------------------------------------------------------
+# SECTION: Helper — layout base sin fondo para gráficos
+# -------------------------------------------------------
+_LAYOUT_TRANSP = {k: v for k, v in CHART_LAYOUT_BASE.items()}
+_LAYOUT_TRANSP["paper_bgcolor"] = "rgba(0,0,0,0)"
+_LAYOUT_TRANSP["plot_bgcolor"]  = "rgba(0,0,0,0)"
 
 # -------------------------------------------------------
 # SECTION: Tabs de análisis
@@ -184,11 +191,13 @@ with tab_perfil:
             df_tv.columns = ["tipo", "n"]
             fig_tv = px.bar(df_tv.sort_values("n"),
                             x="n", y="tipo", orientation="h",
-                            color_discrete_sequence=[COLOR_PRIMARY])
-            fig_tv.update_layout(**{k: v for k, v in CHART_LAYOUT_BASE.items()},
+                            color_discrete_sequence=[COLOR_PRIMARY],
+                            text="n")
+            fig_tv.update_layout(**_LAYOUT_TRANSP,
                                  height=220, xaxis_title="V\u00edctimas",
                                  yaxis_title=None, showlegend=False)
-            fig_tv.update_traces(marker_line_width=0)
+            fig_tv.update_traces(marker_line_width=0,
+                                 textposition="outside", textfont_size=10)
             st.plotly_chart(fig_tv, use_container_width=True)
 
     with r1c2:
@@ -203,11 +212,13 @@ with tab_perfil:
             df_fd.columns = ["factor", "n"]
             fig_fd = px.bar(df_fd.sort_values("n"),
                             x="n", y="factor", orientation="h",
-                            color_discrete_sequence=[COLOR_ACCENT])
-            fig_fd.update_layout(**{k: v for k, v in CHART_LAYOUT_BASE.items()},
+                            color_discrete_sequence=[COLOR_ACCENT],
+                            text="n")
+            fig_fd.update_layout(**_LAYOUT_TRANSP,
                                  height=max(220, len(df_fd)*30+60),
                                  xaxis_title="V\u00edctimas", yaxis_title=None)
-            fig_fd.update_traces(marker_line_width=0)
+            fig_fd.update_traces(marker_line_width=0,
+                                 textposition="outside", textfont_size=10)
             st.plotly_chart(fig_fd, use_container_width=True)
 
     r2c1, r2c2 = st.columns(2, gap="medium")
@@ -223,11 +234,13 @@ with tab_perfil:
             if not df_cargo.empty:
                 fig_cargo = px.bar(df_cargo.sort_values("n"),
                                    x="n", y="cargo", orientation="h",
-                                   color_discrete_sequence=["#4A9BD4"])
-                fig_cargo.update_layout(**{k: v for k, v in CHART_LAYOUT_BASE.items()},
+                                   color_discrete_sequence=["#4A9BD4"],
+                                   text="n")
+                fig_cargo.update_layout(**_LAYOUT_TRANSP,
                                         height=220, xaxis_title="V\u00edctimas",
                                         yaxis_title=None)
-                fig_cargo.update_traces(marker_line_width=0)
+                fig_cargo.update_traces(marker_line_width=0,
+                                        textposition="outside", textfont_size=10)
                 st.plotly_chart(fig_cargo, use_container_width=True)
             else:
                 st.info("No hay v\u00edctimas candidatas en la selecci\u00f3n actual.")
@@ -244,11 +257,13 @@ with tab_perfil:
             if not df_part.empty:
                 fig_part = px.bar(df_part.sort_values("n"),
                                   x="n", y="partido", orientation="h",
-                                  color_discrete_sequence=["#6B4FA0"])
-                fig_part.update_layout(**{k: v for k, v in CHART_LAYOUT_BASE.items()},
+                                  color_discrete_sequence=["#6B4FA0"],
+                                  text="n")
+                fig_part.update_layout(**_LAYOUT_TRANSP,
                                        height=max(220, len(df_part)*30+60),
                                        xaxis_title="V\u00edctimas", yaxis_title=None)
-                fig_part.update_traces(marker_line_width=0)
+                fig_part.update_traces(marker_line_width=0,
+                                       textposition="outside", textfont_size=10)
                 st.plotly_chart(fig_part, use_container_width=True)
 
     # Objetivo político
@@ -263,11 +278,13 @@ with tab_perfil:
         df_obj.columns = ["objetivo", "n"]
         fig_obj = px.bar(df_obj.sort_values("n"),
                          x="n", y="objetivo", orientation="h",
-                         color_discrete_sequence=[COLOR_RIESGO_ALTO])
-        fig_obj.update_layout(**{k: v for k, v in CHART_LAYOUT_BASE.items()},
+                         color_discrete_sequence=[COLOR_RIESGO_ALTO],
+                         text="n")
+        fig_obj.update_layout(**_LAYOUT_TRANSP,
                               height=max(220, len(df_obj)*30+60),
                               xaxis_title="V\u00edctimas", yaxis_title=None)
-        fig_obj.update_traces(marker_line_width=0)
+        fig_obj.update_traces(marker_line_width=0,
+                              textposition="outside", textfont_size=10)
         st.plotly_chart(fig_obj, use_container_width=True)
 
 # --- TAB 2: Interseccionalidad ---
@@ -284,15 +301,14 @@ with tab_intersec:
             df_gen.columns = ["genero", "n"]
             df_gen["genero"] = df_gen["genero"].fillna("Sin dato")
             color_gen = {
-                "Masculino": COLOR_PRIMARY,
-                "Femenino":  COLOR_RIESGO_MEDIO,
+                "Masculino":               COLOR_PRIMARY,
+                "Femenino":                COLOR_RIESGO_MEDIO,
                 "No binario/gender queer": COLOR_ACCENT,
-                "Sin dato":  "#8A9BAA",
+                "Sin dato":                "#8A9BAA",
             }
             fig_gen = px.pie(df_gen, names="genero", values="n",
                              color="genero", color_discrete_map=color_gen, hole=0.4)
-            fig_gen.update_layout(**{k: v for k, v in CHART_LAYOUT_BASE.items()},
-                                  height=260)
+            fig_gen.update_layout(**_LAYOUT_TRANSP, height=260)
             fig_gen.update_traces(textinfo="percent+label", textfont_size=11)
             st.plotly_chart(fig_gen, use_container_width=True)
 
@@ -307,11 +323,13 @@ with tab_intersec:
             df_etnia["etnia"] = df_etnia["etnia"].fillna("Sin dato")
             fig_etnia = px.bar(df_etnia.sort_values("n"),
                                x="n", y="etnia", orientation="h",
-                               color_discrete_sequence=["#1E8A4A"])
-            fig_etnia.update_layout(**{k: v for k, v in CHART_LAYOUT_BASE.items()},
+                               color_discrete_sequence=["#1E8A4A"],
+                               text="n")
+            fig_etnia.update_layout(**_LAYOUT_TRANSP,
                                     height=260, xaxis_title="V\u00edctimas",
                                     yaxis_title=None)
-            fig_etnia.update_traces(marker_line_width=0)
+            fig_etnia.update_traces(marker_line_width=0,
+                                    textposition="outside", textfont_size=10)
             st.plotly_chart(fig_etnia, use_container_width=True)
 
     ti3, ti4 = st.columns(2, gap="medium")
@@ -326,11 +344,13 @@ with tab_intersec:
             df_edad["edad"] = df_edad["edad"].fillna("Sin dato")
             fig_edad = px.bar(df_edad.sort_values("edad"),
                               x="edad", y="n",
-                              color_discrete_sequence=[COLOR_ACCENT])
-            fig_edad.update_layout(**{k: v for k, v in CHART_LAYOUT_BASE.items()},
+                              color_discrete_sequence=[COLOR_ACCENT],
+                              text="n")
+            fig_edad.update_layout(**_LAYOUT_TRANSP,
                                    height=240, xaxis_title=None,
                                    yaxis_title="V\u00edctimas")
-            fig_edad.update_traces(marker_line_width=0)
+            fig_edad.update_traces(marker_line_width=0,
+                                   textposition="outside", textfont_size=10)
             st.plotly_chart(fig_edad, use_container_width=True)
 
     with ti4:
@@ -348,11 +368,13 @@ with tab_intersec:
                                color_discrete_sequence=[
                                    COLOR_PRIMARY, COLOR_RIESGO_MEDIO,
                                    COLOR_ACCENT, "#8A9BAA"
-                               ])
-            fig_cross.update_layout(**{k: v for k, v in CHART_LAYOUT_BASE.items()},
+                               ],
+                               text="n")
+            fig_cross.update_layout(**_LAYOUT_TRANSP,
                                     height=240, xaxis_title=None,
                                     yaxis_title="V\u00edctimas")
-            fig_cross.update_traces(marker_line_width=0)
+            fig_cross.update_traces(marker_line_width=0,
+                                    textposition="inside", textfont_size=10)
             st.plotly_chart(fig_cross, use_container_width=True)
 
     # Personas trans
@@ -388,11 +410,13 @@ with tab_vbg:
                 df_tvbg.columns = ["tipo", "n"]
                 fig_tvbg = px.bar(df_tvbg.sort_values("n"),
                                   x="n", y="tipo", orientation="h",
-                                  color_discrete_sequence=[COLOR_RIESGO_ALTO])
-                fig_tvbg.update_layout(**{k: v for k, v in CHART_LAYOUT_BASE.items()},
+                                  color_discrete_sequence=[COLOR_RIESGO_ALTO],
+                                  text="n")
+                fig_tvbg.update_layout(**_LAYOUT_TRANSP,
                                        height=max(220, len(df_tvbg)*30+60),
                                        xaxis_title="V\u00edctimas", yaxis_title=None)
-                fig_tvbg.update_traces(marker_line_width=0)
+                fig_tvbg.update_traces(marker_line_width=0,
+                                       textposition="outside", textfont_size=10)
                 st.plotly_chart(fig_tvbg, use_container_width=True)
 
         with vb2:
@@ -406,11 +430,13 @@ with tab_vbg:
                 df_evbg.columns = ["elemento", "n"]
                 fig_evbg = px.bar(df_evbg.sort_values("n"),
                                   x="n", y="elemento", orientation="h",
-                                  color_discrete_sequence=[COLOR_RIESGO_MEDIO])
-                fig_evbg.update_layout(**{k: v for k, v in CHART_LAYOUT_BASE.items()},
+                                  color_discrete_sequence=[COLOR_RIESGO_MEDIO],
+                                  text="n")
+                fig_evbg.update_layout(**_LAYOUT_TRANSP,
                                        height=max(220, len(df_evbg)*30+60),
                                        xaxis_title="V\u00edctimas", yaxis_title=None)
-                fig_evbg.update_traces(marker_line_width=0)
+                fig_evbg.update_traces(marker_line_width=0,
+                                       textposition="outside", textfont_size=10)
                 st.plotly_chart(fig_evbg, use_container_width=True)
 
         # Tabla VBG
@@ -421,9 +447,22 @@ with tab_vbg:
         cols_vbg_tabla = [c for c in ["nombre", "genero", "es_trans", "cargo_postula",
                                       "tipo_vbg", "elementos_vbg", "num_serie_incidente"]
                           if c in df_vbg.columns]
-        st.dataframe(df_vbg[cols_vbg_tabla].rename(
-            columns={c: c.replace("_", " ").title() for c in cols_vbg_tabla}
-        ), use_container_width=True, height=280)
+        label_map_vbg = {
+            "nombre":              "Nombre",
+            "genero":              "G\u00e9nero",
+            "es_trans":            "Transg\u00e9nero",
+            "cargo_postula":       "Cargo que postula",
+            "tipo_vbg":            "Tipo de VBG",
+            "elementos_vbg":       "Elementos VBG",
+            "num_serie_incidente": "N\u00b0 incidente",
+        }
+        st.dataframe(
+            df_vbg[cols_vbg_tabla].rename(
+                columns={c: label_map_vbg.get(c, c) for c in cols_vbg_tabla}
+            ),
+            use_container_width=True,
+            height=280,
+        )
 
 # --- TAB 4: Respuesta institucional ---
 with tab_resp:
@@ -432,25 +471,22 @@ with tab_resp:
     with tr1:
         st.markdown(
             "<div class='section-header'>Instancia de denuncia</div>"
-            "<div class='section-subheader'>\u00bfDonde report\u00f3 la v\u00edctima?</div>",
+            "<div class='section-subheader'>\u00bfD\u00f3nde report\u00f3 la v\u00edctima?</div>",
             unsafe_allow_html=True,
         )
         if "instancia_denuncia" in df_vf.columns:
             serie_inst = _explode_multiselect(df_vf, "instancia_denuncia")
             df_inst = serie_inst.value_counts().reset_index()
             df_inst.columns = ["instancia", "n"]
-            color_inst = df_inst["instancia"].apply(
-                lambda x: COLOR_RIESGO_ALTO
-                if "no se ha hecho" in str(x).lower()
-                else COLOR_RIESGO_BAJO
-            ).tolist()
             fig_inst = px.bar(df_inst.sort_values("n"),
                               x="n", y="instancia", orientation="h",
-                              color_discrete_sequence=[COLOR_PRIMARY])
-            fig_inst.update_layout(**{k: v for k, v in CHART_LAYOUT_BASE.items()},
+                              color_discrete_sequence=[COLOR_PRIMARY],
+                              text="n")
+            fig_inst.update_layout(**_LAYOUT_TRANSP,
                                    height=max(220, len(df_inst)*32+60),
                                    xaxis_title="V\u00edctimas", yaxis_title=None)
-            fig_inst.update_traces(marker_line_width=0)
+            fig_inst.update_traces(marker_line_width=0,
+                                   textposition="outside", textfont_size=10)
             st.plotly_chart(fig_inst, use_container_width=True)
 
     with tr2:
@@ -463,14 +499,19 @@ with tab_resp:
             df_res = df_vf["resultado_denuncia"].value_counts(dropna=False).reset_index()
             df_res.columns = ["resultado", "n"]
             df_res["resultado"] = df_res["resultado"].fillna("Sin dato")
-            fig_res = px.pie(df_res, names="resultado", values="n",
+            # CAMBIO: pie → barras horizontales (más legible con etiquetas largas)
+            fig_res = px.bar(df_res.sort_values("n"),
+                             x="n", y="resultado", orientation="h",
                              color_discrete_sequence=[
                                  COLOR_RIESGO_BAJO, COLOR_RIESGO_MEDIO,
                                  COLOR_RIESGO_ALTO, "#4A9BD4", "#8A9BAA"
-                             ], hole=0.4)
-            fig_res.update_layout(**{k: v for k, v in CHART_LAYOUT_BASE.items()},
-                                  height=280)
-            fig_res.update_traces(textinfo="percent+label", textfont_size=11)
+                             ],
+                             text="n")
+            fig_res.update_layout(**_LAYOUT_TRANSP,
+                                  height=max(220, len(df_res)*32+60),
+                                  xaxis_title="V\u00edctimas", yaxis_title=None)
+            fig_res.update_traces(marker_line_width=0,
+                                  textposition="outside", textfont_size=10)
             st.plotly_chart(fig_res, use_container_width=True)
 
     st.markdown(
@@ -487,9 +528,18 @@ with tab_resp:
         if df_mp.empty:
             st.info("No hay medidas de protecci\u00f3n registradas en la selecci\u00f3n actual.")
         else:
-            st.dataframe(df_mp.rename(
-                columns={c: c.replace("_", " ").title() for c in df_mp.columns}
-            ), use_container_width=True, height=280)
+            label_map_mp = {
+                "nombre":             "Nombre",
+                "tipo_victima":       "Tipo",
+                "cargo_postula":      "Cargo que postula",
+                "medidas_proteccion": "Medidas de protecci\u00f3n",
+                "resultado_denuncia": "Resultado",
+            }
+            st.dataframe(
+                df_mp.rename(columns={c: label_map_mp.get(c, c) for c in df_mp.columns}),
+                use_container_width=True,
+                height=280,
+            )
 
 # -------------------------------------------------------
 # SECTION: Footer
