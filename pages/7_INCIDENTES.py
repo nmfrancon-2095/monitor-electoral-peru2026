@@ -311,11 +311,11 @@ with row2_r:
             height=CHART_HEIGHT_SMALL,
             xaxis_title=None,
             yaxis_title="Frecuencia",
-            xaxis=dict(
-                tickangle=-30,
-                tickfont=dict(size=10),
-                showgrid=False,
-            ),
+        )
+        fig_forma.update_xaxes(
+            tickangle=-30,
+            tickfont=dict(size=10),
+            showgrid=False,
         )
         fig_forma.update_traces(
             marker_line_width=0,
