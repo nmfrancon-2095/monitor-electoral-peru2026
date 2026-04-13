@@ -553,9 +553,9 @@ if selected:
             '<div style="margin:28px 0 10px 0;">'
             '<p style="font-size:0.65rem;font-weight:700;letter-spacing:0.12em;'
             'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';margin:0 0 2px 0;">'
-            'An\u00e1lisis visual</p>'
+            'Análisis visual</p>'
             '<p style="font-size:1.05rem;font-weight:700;color:' + COLOR_TEXT_PRIMARY + ';'
-            'margin:0;letter-spacing:-0.01em;">Distribuci\u00f3n de votos por bloque</p>'
+            'margin:0;letter-spacing:-0.01em;">Distribución de votos por bloque</p>'
             '</div>',
             unsafe_allow_html=True,
         )
@@ -569,8 +569,8 @@ if selected:
             BLOQUES_ORDEN = ["pro-crimen", "reinfo", "ambiental", "espacio-civico", "bicameralidad"]
             BLOQUES_LABEL = {
                 "pro-crimen": "Pro-crimen", "reinfo": "REINFO",
-                "ambiental": "Ambiental", "espacio-civico": "Espacio c\u00edvico",
-                "bicameralidad": "Bicameralidad",
+                "ambiental": "Ambiental", "espacio-civico": "Espacio cívico",
+                "bicameralidad": "Bicameralidad", "genero": "Género"
             }
 
             filas_stack = []
