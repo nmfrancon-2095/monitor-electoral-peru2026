@@ -8,7 +8,7 @@
 import pandas as pd
 import streamlit as st
 from config import (
-    DATA_FILE, LEYES_COLS,
+    DATA_FILE, LEYES_COLS, SCORE_COLS,
     SCORE_ALTO_MIN, SCORE_MEDIO_MIN,
     LABEL_RIESGO, REGIONES_PRIORITARIAS
 )
@@ -84,7 +84,8 @@ def cargar_congresistas() -> pd.DataFrame:
 def cargar_votaciones() -> pd.DataFrame:
     """
     Carga la hoja 03_VOTACIONES (congresistas que también postulan).
-    Incluye scores y votos por ley.
+    Incluye scores por bloque (score_procrimen, score_reinfo, score_ambiental,
+    score_espacio_civico, score_bicameralidad, score_genero) y score_total.
     Agrega columna 'nivel_riesgo' basada en score_total.
     """
     df = pd.read_excel(DATA_FILE, sheet_name="03_VOTACIONES", dtype={"dni": str})
@@ -118,7 +119,7 @@ def cargar_reinfo() -> pd.DataFrame:
 @st.cache_data
 def cargar_leyes() -> pd.DataFrame:
     """
-    Carga la hoja 05_LEYES (catálogo de las 16 leyes analizadas).
+    Carga la hoja 05_LEYES (catálogo de las 19 leyes analizadas).
     Columnas: clave, etiqueta, bloque, fecha, tipo_votacion, notas
     """
     df = pd.read_excel(DATA_FILE, sheet_name="05_LEYES")
@@ -193,7 +194,8 @@ def candidatos_con_flags() -> pd.DataFrame:
     # Merge con votaciones (congresistas que postulan)
     df = cands.merge(
         votos[["dni", "score_total", "nivel_riesgo", "etiqueta_riesgo",
-               "es_congresista", "tiene_reinfo", "grupo_parl"]],
+               "es_congresista", "tiene_reinfo", "grupo_parl", "leyes_autoria"]
+              + SCORE_COLS + ["bonus_autoria"]],
         on="dni",
         how="left"
     )

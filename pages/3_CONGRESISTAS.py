@@ -431,11 +431,15 @@ if selected:
             score       = datos.get("score_total", None)
             score_val   = int(score) if pd.notna(score) else 0
             score_txt   = str(score_val) if pd.notna(score) else "\u2014"
-            SCORE_MAX   = 32   # 16 leyes x 2 puntos máx
-            score_pct   = min(round(score_val / SCORE_MAX * 100), 100)
-            s_procrimen = int(datos.get("score_procrimen", 0) or 0)
-            s_contexto  = int(datos.get("score_contexto",  0) or 0)
-            s_autoria   = int(datos.get("bonus_autoria",   0) or 0)
+            SCORE_MAX_TOTAL = 38   # 19 leyes x 2 puntos máx (sin bonus)
+            score_pct   = min(round(score_val / SCORE_MAX_TOTAL * 100), 100)
+            s_procrimen      = int(datos.get("score_procrimen",      0) or 0)
+            s_reinfo         = int(datos.get("score_reinfo",         0) or 0)
+            s_ambiental      = int(datos.get("score_ambiental",      0) or 0)
+            s_espacio_civico = int(datos.get("score_espacio_civico", 0) or 0)
+            s_bicameralidad  = int(datos.get("score_bicameralidad",  0) or 0)
+            s_genero         = int(datos.get("score_genero",         0) or 0)
+            s_autoria        = int(datos.get("bonus_autoria",        0) or 0)
             etiqueta    = str(datos.get("etiqueta_riesgo", "Sin dato"))
 
             _html_score = (
@@ -455,7 +459,7 @@ if selected:
                 + '<div style="margin-bottom:16px;">'
                 '<div style="display:flex;justify-content:space-between;'
                 'font-size:0.65rem;color:' + COLOR_TEXT_MUTED + ';margin-bottom:4px;">'
-                '<span>0</span><span>m\u00e1x ' + str(SCORE_MAX) + '</span></div>'
+                '<span>0</span><span>m\u00e1x ' + str(SCORE_MAX_TOTAL) + '</span></div>'
                 '<div style="background:' + COLOR_BORDER + ';border-radius:4px;height:8px;overflow:hidden;">'
                 '<div style="width:' + str(score_pct) + '%;height:100%;background:' + color_n + ';'
                 'border-radius:4px;"></div>'
@@ -466,9 +470,13 @@ if selected:
                 '</div>'
                 # Desglose por componente
                 + '<div style="border-top:1px solid ' + COLOR_BORDER + ';padding-top:12px;">'
-                + _desglose_row("Pro-crimen", s_procrimen)
-                + _desglose_row("Contexto",   s_contexto)
-                + _desglose_row("Autor\u00eda", s_autoria)
+                + _desglose_row("Pro-crimen",       s_procrimen)
+                + _desglose_row("REINFO",            s_reinfo)
+                + _desglose_row("Ambiental",         s_ambiental)
+                + _desglose_row("Esp. c\u00edvico",  s_espacio_civico)
+                + _desglose_row("Bicameralidad",     s_bicameralidad)
+                + _desglose_row("G\u00e9nero",        s_genero)
+                + _desglose_row("Autor\u00eda",       s_autoria)
                 + '</div>'
                 '</div>'
             )

@@ -71,7 +71,7 @@ tab_obj, tab_fuentes, tab_scoring, tab_leyes_meta, tab_tecnico = st.tabs([
     "🎯 Objetivos",
     "📂 Fuentes de datos",
     "⚖️ Sistema de scoring",
-    "📜 Las 16 leyes",
+    "📜 Las 19 leyes",
     "🔧 Notas técnicas",
 ])
 
@@ -107,7 +107,7 @@ with tab_obj:
 
     preguntas = [
         ("🗳️ ¿Quiénes votaron?",
-         "¿Qué congresistas votaron a favor de las 16 leyes identificadas como "
+         "¿Qué congresistas votaron a favor de las 19 leyes identificadas como "
          "preocupantes en términos de seguridad, criminalidad y/o derechos humanos? "
          "¿Con qué frecuencia y en qué bloques temáticos?"),
         ("⚡ ¿Quiénes impulsaron las leyes?",
@@ -199,7 +199,7 @@ with tab_fuentes:
             "color": COLOR_RIESGO_ALTO,
             "fuente": "votaciones.congreso.gob.pe (oficial)",
             "contenido": "Voto nominal de cada congresista en cada una de las "
-                         "16 leyes analizadas",
+                         "19 leyes analizadas",
             "variables": "DNI/nombre congresista, ID ley, tipo de voto "
                          "(A favor / En contra / Abstención / Ausente / Licencia), "
                          "fecha, tipo de votación",
@@ -246,7 +246,7 @@ with tab_scoring:
         <p style='color:{COLOR_TEXT_SECONDARY}; font-size:0.9em; margin-bottom:16px;'>
         El sistema de scoring asigna una puntuación numérica a cada congresista
         basada en su comportamiento observable en datos públicos. Actualmente
-        solo se aplica a congresistas con historial legislativo en las 16 leyes.
+        solo se aplica a congresistas con historial legislativo en las 19 leyes.
         </p>
         """,
         unsafe_allow_html=True,
@@ -528,14 +528,35 @@ with tab_leyes_meta:
          "Se analiza en el contexto del proceso de reforma institucional y los "
          "patrones de voto asociados.",
          "Segunda votación definitiva"),
+         ("17", "Ley 32535 — Igualdad de oportunidades", "genero",
+         "Ley de Igualdad de Oportunidades entre Mujeres y Hombres. "
+         "Establece un marco normativo para garantizar la igualdad en el acceso "
+         "a oportunidades económicas, sociales y políticas. Se analiza como "
+         "indicador de posicionamiento legislativo frente a la agenda de igualdad formal.",
+         "Primera votación"),
+         ("18", "Ley 31498 — Materiales educativos", "genero",
+         "Ley que regula la calidad de materiales y recursos educativos "
+         "con participación de padres de familia en su revisión. "
+         "Impulsada por sectores críticos de la educación en igualdad de género, "
+         "se analiza como indicador de posición frente a contenidos de igualdad "
+         "en el sistema educativo.",
+         "Primera votación"),
+         ("19", "Ley 32331 — Indemnidad sexual de NNA", "genero",
+         "Ley que fortalece la protección de la indemnidad sexual de niños, niñas "
+         "y adolescentes. Conocida por incluir disposiciones que restringen el acceso "
+         "de personas trans a espacios según su identidad de género. Se analiza "
+         "como indicador de posición frente a derechos de grupos en situación "
+         "de vulnerabilidad.",
+         "Primera votación")
     ]
 
     COLORES_BLOQUE = {
-        "pro-crimen":     COLOR_RIESGO_ALTO,
-        "reinfo":         COLOR_REINFO,
-        "ambiental":      "#27AE60",
-        "espacio-civico": "#8E44AD",
-        "bicameralidad":  COLOR_ACCENT,
+    "pro-crimen":     "#B83232",
+    "reinfo":         "#B85C0A",
+    "ambiental":      "#1E8A4A",
+    "espacio-civico": "#6B4FA0",
+    "bicameralidad":  "#2878B5",
+    "genero":         "#C2185B"
     }
     ETIQUETA_BLOQUE = {
         "pro-crimen":     "⚖️ Pro-crimen",
@@ -543,6 +564,7 @@ with tab_leyes_meta:
         "ambiental":      "🌿 Ambiental",
         "espacio-civico": "🏛️ Espacio cívico",
         "bicameralidad":  "🏛️ Bicameralidad",
+        "genero":         "👥 Género"
     }
 
     bloque_actual = None
@@ -686,10 +708,6 @@ with tab_tecnico:
         ">
             Los siguientes bloques están planificados para incorporarse en
             próximas versiones del dashboard:<br><br>
-            <b>⚧️ Bloque 6 — Leyes que afectan igualdad de género:</b>
-            Leyes que retroceden en protecciones para mujeres, acceso a servicios
-            de salud sexual y reproductiva, o mecanismos contra la violencia
-            de género.<br><br>
             <b>🕊️ Bloque 7 — Leyes que eliminan rendición de cuentas por
             el conflicto armado interno:</b>
             Normas que favorecen la impunidad por violaciones de derechos humanos

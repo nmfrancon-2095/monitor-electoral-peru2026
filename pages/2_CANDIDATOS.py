@@ -56,8 +56,9 @@ def preparar_tabla_candidatos() -> pd.DataFrame:
 
     df = cands.merge(
         votos[[
-            "dni", "score_total", "score_procrimen", "score_contexto",
-            "bonus_autoria", "es_congresista", "grupo_parl", "leyes_autoria",
+            "dni", "score_total", "score_procrimen", "score_reinfo",
+            "score_ambiental", "score_espacio_civico", "score_bicameralidad",
+            "score_genero", "bonus_autoria", "es_congresista", "grupo_parl", "leyes_autoria",
         ]],
         on="dni", how="left",
     )
@@ -371,9 +372,13 @@ if selected:
                 """Convierte a int de forma segura: NaN y None → 0."""
                 return int(val) if pd.notna(val) and val is not None else 0
 
-            s_procrimen = _safe_int(datos.get("score_procrimen"))
-            s_contexto  = _safe_int(datos.get("score_contexto"))
-            s_bonus     = _safe_int(datos.get("bonus_autoria"))
+            s_procrimen       = _safe_int(datos.get("score_procrimen"))
+            s_reinfo          = _safe_int(datos.get("score_reinfo"))
+            s_ambiental       = _safe_int(datos.get("score_ambiental"))
+            s_espacio_civico  = _safe_int(datos.get("score_espacio_civico"))
+            s_bicameralidad   = _safe_int(datos.get("score_bicameralidad"))
+            s_genero          = _safe_int(datos.get("score_genero"))
+            s_bonus           = _safe_int(datos.get("bonus_autoria"))
 
             st.markdown(
                 f"""
@@ -412,12 +417,12 @@ if selected:
                         <div style="text-align:center; flex:1; border-left:1px solid {color_riesgo}22;">
                             <div style="font-size:1.3rem; font-weight:700;
                                         color:{color_riesgo}; font-variant-numeric:tabular-nums;">
-                                {s_contexto}
+                                {s_reinfo + s_ambiental + s_espacio_civico + s_bicameralidad + s_genero}
                             </div>
                             <div style="font-size:0.58rem; font-weight:600;
                                         letter-spacing:0.06em; text-transform:uppercase;
                                         color:{COLOR_TEXT_MUTED}; margin-top:2px;">
-                                Contexto
+                                Otros bloques
                             </div>
                         </div>
                         <div style="text-align:center; flex:1; border-left:1px solid {color_riesgo}22;">
@@ -629,18 +634,62 @@ if selected:
                     <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
                         <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
                                     text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
-                            Score contexto
+                            Score REINFO
                         </div>
                         <div style="font-size:0.88rem; font-weight:600;
-                                    color:{COLOR_TEXT_PRIMARY}; margin-top:2px;
+                                    color:#B85C0A; margin-top:2px;
                                     font-variant-numeric:tabular-nums;">
-                            {int(voto_data.get("score_contexto", 0) or 0)}
+                            {int(voto_data.get("score_reinfo", 0) or 0)}
                         </div>
                     </div>
                     <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
                         <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
                                     text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
-                            Bonus autoría
+                            Score ambiental
+                        </div>
+                        <div style="font-size:0.88rem; font-weight:600;
+                                    color:#1E8A4A; margin-top:2px;
+                                    font-variant-numeric:tabular-nums;">
+                            {int(voto_data.get("score_ambiental", 0) or 0)}
+                        </div>
+                    </div>
+                    <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
+                        <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
+                                    text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
+                            Score esp. c\u00edvico
+                        </div>
+                        <div style="font-size:0.88rem; font-weight:600;
+                                    color:#6B4FA0; margin-top:2px;
+                                    font-variant-numeric:tabular-nums;">
+                            {int(voto_data.get("score_espacio_civico", 0) or 0)}
+                        </div>
+                    </div>
+                    <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
+                        <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
+                                    text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
+                            Score bicameral.
+                        </div>
+                        <div style="font-size:0.88rem; font-weight:600;
+                                    color:#2878B5; margin-top:2px;
+                                    font-variant-numeric:tabular-nums;">
+                            {int(voto_data.get("score_bicameralidad", 0) or 0)}
+                        </div>
+                    </div>
+                    <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
+                        <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
+                                    text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
+                            Score g\u00e9nero
+                        </div>
+                        <div style="font-size:0.88rem; font-weight:600;
+                                    color:#C2185B; margin-top:2px;
+                                    font-variant-numeric:tabular-nums;">
+                            {int(voto_data.get("score_genero", 0) or 0)}
+                        </div>
+                    </div>
+                    <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
+                        <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
+                                    text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
+                            Bonus autor\u00eda
                         </div>
                         <div style="font-size:0.88rem; font-weight:600;
                                     color:{COLOR_REINFO}; margin-top:2px;

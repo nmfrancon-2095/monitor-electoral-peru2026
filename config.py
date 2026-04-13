@@ -56,8 +56,8 @@ COLOR_REINFO_BG         = "#FEF4EC"
 # -------------------------------------------------------
 # SECTION: Umbrales de score
 # -------------------------------------------------------
-SCORE_ALTO_MIN  = 20
-SCORE_MEDIO_MIN = 10
+SCORE_ALTO_MIN  = 25
+SCORE_MEDIO_MIN = 12
 
 # -------------------------------------------------------
 # SECTION: Etiquetas de UI
@@ -114,14 +114,16 @@ BLOQUES = {
     "ambiental":      "Ambiental",
     "espacio-civico": "Espacio cívico",
     "bicameralidad":  "Bicameralidad",
+    "genero":         "Género",
 }
 
 BLOQUES_LARGO = {
-    "pro-crimen":     "Pro-crimen — debilitan el sistema de justicia",
-    "reinfo":         "REINFO — registro minero informal",
-    "ambiental":      "Ambiental — protección de bosques",
-    "espacio-civico": "Espacio cívico — sociedad civil",
-    "bicameralidad":  "Bicameralidad — reforma institucional",
+    "pro-crimen":     "Pro-crimen - debilitan el sistema de justicia",
+    "reinfo":         "REINFO - registro minero informal",
+    "ambiental":      "Ambiental - Protección de bosques",
+    "espacio-civico": "Espacio cívico - Protección de organizaciones de la sociedad civil",
+    "bicameralidad":  "Bicameralidad - reforma constitucional para crear un congreso de Senado y Cámara de Diputados",
+    "genero":         "Género -  igualdad y protección frente a violencia",
 }
 
 COLOR_BLOQUE = {
@@ -130,13 +132,14 @@ COLOR_BLOQUE = {
     "ambiental":      "#1E8A4A",
     "espacio-civico": "#6B4FA0",
     "bicameralidad":  "#2878B5",
+    "genero":         "#C2185B",
 }
 
 # -------------------------------------------------------
 # SECTION: Columnas de leyes
 # -------------------------------------------------------
 LEYES_COLS = [
-    "L31751 Prescripción 1 año",
+    "L31751 Prescripciónn penal de 1 año",
     "L31880 Prisión preventiva",
     "L31989 Elimina incautación",
     "L31990 Limita colaboración eficaz",
@@ -152,14 +155,42 @@ LEYES_COLS = [
     "L31973 Ley Forestal",
     "L32301 Ley APCI",
     "L31988 Bicameralidad",
+    "L32535 Igualdad de oportunidades",
+    "L31498 Materiales educativos",
+    "L32331 Indemnidad sexual NNA",
 ]
+
+# Columnas de score por bloque (excluye bonus_autoria y score_total)
+# Orden: de mayor a menor peso en el an\u00e1lisis
+SCORE_COLS = [
+    "score_procrimen",
+    "score_reinfo",
+    "score_ambiental",
+    "score_espacio_civico",
+    "score_bicameralidad",
+    "score_genero",
+]
+
+# M\u00e1ximos te\u00f3ricos por bloque (A FAVOR = 2 pts por ley)
+SCORE_MAX = {
+    "score_procrimen":      20,   # 10 leyes x 2
+    "score_reinfo":          6,   #  3 leyes x 2
+    "score_ambiental":       2,   #  1 ley  x 2
+    "score_espacio_civico":  2,   #  1 ley  x 2
+    "score_bicameralidad":   2,   #  1 ley  x 2
+    "score_genero":          6,   #  3 leyes x 2
+    "bonus_autoria":         5,   # máximo de 5 bonus
+    "score_total":          53,   # suma con bonus_autoria
+}
 
 REGIONES_PRIORITARIAS = ["Ucayali", "Loreto", "Madre de Dios", "Puno"]
 
 TIPOS_ELECCION = [
     "PRESIDENCIAL",
     "SENADORES DISTRITO ÚNICO",
+    "SENADORES DISTRITO MÚLTIPLE"
     "DIPUTADOS",
+    "PARLAMENTO ANDINO"
 ]
 
 # -------------------------------------------------------

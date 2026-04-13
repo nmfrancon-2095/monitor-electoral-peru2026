@@ -42,11 +42,12 @@ from data_loader import cargar_votaciones, cargar_leyes, cargar_candidatos
 TRANSPARENT = "rgba(0,0,0,0)"
 
 COLORES_BLOQUE = {
-    "pro-crimen":     COLOR_RIESGO_ALTO,
-    "reinfo":         COLOR_REINFO,
-    "ambiental":      "#27AE60",
-    "espacio-civico": "#8E44AD",
-    "bicameralidad":  COLOR_ACCENT,
+    "pro-crimen":     "#B83232",
+    "reinfo":         "#B85C0A",
+    "ambiental":      "#1E8A4A",
+    "espacio-civico": "#6B4FA0",
+    "bicameralidad":  "#2878B5",
+    "genero":         "#C2185B"
 }
 
 DESCRIPCION_BLOQUES = {
@@ -82,6 +83,16 @@ DESCRIPCION_BLOQUES = {
         "Senado en el Parlamento peruano. Analizamos los patrones de voto "
         "en el contexto del proceso de reforma institucional."
     ),
+    "genero": (
+        "Leyes relacionadas con igualdad de género y educación."
+        "Incluyen la Ley de Igualdad de Oportunidades entre mujeres y hombres (L32535), "
+        "la ley que regula los materiales educativos con participación de padres de familia (L31498) "
+        "— impulsada por sectores críticos de la educación con enfoque de género — "
+        "y la ley de indemnidad sexual de niños, niñas y adolescentes (L32331), "
+        "conocida por restringir el acceso de personas trans a espacios según su identidad. "
+        "El patrón de votación en este bloque permite identificar posiciones legislativas "
+        "frente a agendas de igualdad de género y derechos de grupos en situación de vulnerabilidad."
+    )
 }
 
 # -------------------------------------------------------
@@ -144,7 +155,7 @@ st.markdown(
 # -------------------------------------------------------
 tab_leyes, tab_patrones, tab_riesgo = st.tabs([
     "\U0001f4dc Leyes clave",
-    "\U0001f5f3\ufe0f Patrones de votaci\u00f3n",
+    "\U0001f5f3\ufe0f Patrones de votación",
     "\u26a0\ufe0f Patrones de riesgo",
 ])
 
@@ -155,8 +166,8 @@ tab_leyes, tab_patrones, tab_riesgo = st.tabs([
 with tab_leyes:
     st.markdown(
         '<p style="color:' + COLOR_TEXT_SECONDARY + ';font-size:0.9em;margin-bottom:16px;">'
-        'Las 16 leyes analizadas se agrupan en 5 bloques tem\u00e1ticos. '
-        'Cada ley tiene un tipo de votaci\u00f3n definitiva que determina si el voto '
+        'Las 19 leyes analizadas se agrupan en 6 bloques temáticos. '
+        'Cada ley tiene un tipo de votación definitiva que determina si el voto '
         'cuenta para el score. Haz clic en el enlace de cada ley para acceder al texto oficial.</p>',
         unsafe_allow_html=True,
     )
@@ -497,10 +508,10 @@ with tab_patrones:
         '<div style="margin:8px 0 10px 0;">'
         '<p style="font-size:0.65rem;font-weight:700;letter-spacing:0.12em;'
         'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';margin:0 0 2px 0;">'
-        'Distribuci\u00f3n individual</p>'
+        'Distribución individual</p>'
         '<p style="font-size:1.05rem;font-weight:700;color:' + COLOR_TEXT_PRIMARY + ';'
         'margin:0;letter-spacing:-0.01em;">'
-        '\u00bfCu\u00e1ntas leyes vot\u00f3 A FAVOR cada congresista?</p>'
+        'Cuántas leyes votó A FAVOR cada congresista?</p>'
         '</div>',
         unsafe_allow_html=True,
     )
@@ -517,7 +528,7 @@ with tab_patrones:
             "none":  COLOR_RIESGO_NONE,
         },
         labels={
-            "n_afavor":    "N\u00b0 de leyes votadas A FAVOR (de 16)",
+            "n_afavor":    "Número de leyes votadas A FAVOR (de 19)",
             "nivel_riesgo": "Riesgo",
             "count":        "Congresistas",
         },
@@ -542,8 +553,8 @@ with tab_patrones:
 with tab_riesgo:
     st.markdown(
         '<p style="color:' + COLOR_TEXT_SECONDARY + ';font-size:0.9em;margin-bottom:12px;">'
-        'Distribuci\u00f3n del score de riesgo y concentraci\u00f3n por partido, '
-        'grupo parlamentario y regi\u00f3n.</p>',
+        'Distribución del score de riesgo y concentración por partido, '
+        'grupo parlamentario y región.</p>',
         unsafe_allow_html=True,
     )
 
@@ -592,7 +603,7 @@ with tab_riesgo:
             COLOR_REINFO_BG, "#E8C8A8", COLOR_REINFO,
         )
         + _kpi_card(
-            "\u26a1 Con bonus autor\u00eda",
+            "\u26a1 Con bonus autor/a",
             n_autores,
             "Autores de al menos 1 ley clave",
             COLOR_RIESGO_MEDIO_BG, "#E8D8B0", COLOR_RIESGO_MEDIO,
@@ -721,10 +732,10 @@ with tab_riesgo:
         '<div style="margin:8px 0 10px 0;">'
         '<p style="font-size:0.65rem;font-weight:700;letter-spacing:0.12em;'
         'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';margin:0 0 2px 0;">'
-        'Concentraci\u00f3n territorial</p>'
+        'Concentración territorial</p>'
         '<p style="font-size:1.05rem;font-weight:700;color:' + COLOR_TEXT_PRIMARY + ';'
         'margin:0;letter-spacing:-0.01em;">'
-        'Candidatos en regiones prioritarias por tipo de elecci\u00f3n</p>'
+        'Candidatos en regiones prioritarias por tipo de elección</p>'
         '</div>',
         unsafe_allow_html=True,
     )
@@ -742,7 +753,7 @@ with tab_riesgo:
         x="region", y="candidatos",
         color="tipo_eleccion",
         barmode="stack",
-        labels={"region": "Regi\u00f3n", "candidatos": "N\u00b0 candidatos", "tipo_eleccion": "Tipo de elecci\u00f3n"},
+        labels={"region": "Región", "candidatos": "Número de candidatos", "tipo_eleccion": "Tipo de elección"},
         color_discrete_sequence=px.colors.qualitative.Set2,
         height=320,
         text="candidatos",
@@ -792,7 +803,7 @@ with tab_riesgo:
             "grupo_parl":    "Grupo parlamentario",
             "total":         "Total",
             "score_promedio":"Score prom.",
-            "score_max":     "Score m\u00e1x.",
+            "score_max":     "Score max.",
             "riesgo_alto":   "Riesgo alto",
             "riesgo_medio":  "Riesgo medio",
             "con_reinfo":    "Con REINFO",
@@ -822,7 +833,7 @@ st.markdown(
     '<div style="margin-top:32px;padding-top:12px;border-top:1px solid ' + COLOR_BORDER + ';'
     'font-size:0.78em;color:' + COLOR_TEXT_SECONDARY + ';display:flex;justify-content:space-between;">'
     '<span>' + APP_CONFIDENTIAL_LABEL + '</span>'
-    '<span>Fuentes: JNE \u00b7 Congreso del Per\u00fa \u00b7 REINFO</span>'
+    '<span>Fuentes: JNE \u00b7 Congreso del Perú \u00b7 REINFO</span>'
     '</div>',
     unsafe_allow_html=True,
 )
