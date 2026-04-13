@@ -566,7 +566,7 @@ if selected:
             # Barras horizontales apiladas — todos los bloques siempre visibles.
             # Iteramos BLOQUES_ORDEN explícitamente para que nunca falte un bloque
             # aunque el congresista tenga 0 votos en ese bloque.
-            BLOQUES_ORDEN = ["pro-crimen", "reinfo", "ambiental", "espacio-civico", "bicameralidad"]
+            BLOQUES_ORDEN = ["pro-crimen", "reinfo", "ambiental", "espacio-civico", "bicameralidad", "genero"]
             BLOQUES_LABEL = {
                 "pro-crimen": "Pro-crimen", "reinfo": "REINFO",
                 "ambiental": "Ambiental", "espacio-civico": "Espacio cívico",
@@ -633,7 +633,7 @@ if selected:
             ORDEN_VOTO  = ["A FAVOR", "AUSENTE", "ABSTENCION", "LICENCIA", "EN CONTRA", "SIN DATO"]
             LABELS_DISP = {
                 "A FAVOR": "A favor", "EN CONTRA": "En contra",
-                "ABSTENCION": "Abstenci\u00f3n", "AUSENTE": "Ausente",
+                "ABSTENCION": "Abstención", "AUSENTE": "Ausente",
                 "LICENCIA": "Licencia", "SIN DATO": "Sin dato",
             }
             COL_DONUT = {
