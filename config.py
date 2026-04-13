@@ -298,10 +298,17 @@ GLOBAL_CSS = """
 /* =====================================================
    BASE
    ===================================================== */
-html, body, [class*="css"] {
-    font-family: 'DM Sans', 'Instrument Sans', system-ui, -apple-system, sans-serif !important;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+/* Sobreescribe la fuente base de Streamlit */
+:root, html, body, * {
+    font-family: 'DM Sans', 'Instrument Sans', system-ui, sans-serif !important;
+}
+
+/* Excepción: elementos que deben usar Fraunces */
+.section-header,
+.score-number,
+.page-title,
+.page-title-light {
+    font-family: 'Fraunces', Georgia, serif !important;
 }
 
 .stApp { background-color: #EFF3F8; }
