@@ -8,9 +8,10 @@
 import pandas as pd
 import streamlit as st
 from config import (
-    DATA_FILE, LEYES_COLS, SCORE_COLS,
+    DATA_FILE, LEYES_COLS,
     SCORE_ALTO_MIN, SCORE_MEDIO_MIN,
-    LABEL_RIESGO, REGIONES_PRIORITARIAS
+    LABEL_RIESGO, REGIONES_PRIORITARIAS,
+    COLOR_ABORDAJE, COLOR_ABORDAJE_BG, LABEL_ABORDAJE
 )
 
 
@@ -84,8 +85,7 @@ def cargar_congresistas() -> pd.DataFrame:
 def cargar_votaciones() -> pd.DataFrame:
     """
     Carga la hoja 03_VOTACIONES (congresistas que también postulan).
-    Incluye scores por bloque (score_procrimen, score_reinfo, score_ambiental,
-    score_espacio_civico, score_bicameralidad, score_genero) y score_total.
+    Incluye scores y votos por ley.
     Agrega columna 'nivel_riesgo' basada en score_total.
     """
     df = pd.read_excel(DATA_FILE, sheet_name="03_VOTACIONES", dtype={"dni": str})
@@ -119,10 +119,57 @@ def cargar_reinfo() -> pd.DataFrame:
 @st.cache_data
 def cargar_leyes() -> pd.DataFrame:
     """
-    Carga la hoja 05_LEYES (catálogo de las 19 leyes analizadas).
+    Carga la hoja 05_LEYES (catálogo de las 16 leyes analizadas).
     Columnas: clave, etiqueta, bloque, fecha, tipo_votacion, notas
     """
     df = pd.read_excel(DATA_FILE, sheet_name="05_LEYES")
+    return df
+
+
+@st.cache_data
+def cargar_segunda_vuelta() -> pd.DataFrame:
+    """
+    Carga la hoja 06_SEGUNDA_VUELTA del Excel maestro.
+    Contiene el análisis comparativo Capa 2 de Fujimori vs. Sánchez Palomino
+    por tema y subtema, con nivel de abordaje para cada candidato.
+
+    Columnas esperadas:
+        tema_num, tema_label, subtema,
+        analisis_fujimori, analisis_sanchez,
+        nivel_fujimori, nivel_sanchez
+
+    Normaliza los valores de nivel a mayúsculas para coincidir
+    con los diccionarios COLOR_ABORDAJE / LABEL_ABORDAJE de config.py.
+    """
+    df = pd.read_excel(DATA_FILE, sheet_name="06_SEGUNDA_VUELTA")
+
+    # Normalizar nombres de columnas: minúsculas y sin espacios extra
+    df.columns = df.columns.str.strip().str.lower()
+
+    # Eliminar filas completamente vacías (si las hubiera por formato Excel)
+    df = df.dropna(how="all").reset_index(drop=True)
+
+    # Normalizar niveles de abordaje a mayúsculas sin espacios
+    for col in ["nivel_fujimori", "nivel_sanchez"]:
+        if col in df.columns:
+            df[col] = (
+                df[col]
+                .astype(str)
+                .str.strip()
+                .str.upper()
+                .replace("NAN", "AUSENTE")
+            )
+
+    # Asegurar que tema_num sea string para filtros y labels
+    if "tema_num" in df.columns:
+        df["tema_num"] = df["tema_num"].astype(str).str.strip()
+
+    # Forward-fill tema_num y tema_label: en el Excel pueden estar
+    # solo en la primera fila de cada bloque temático
+    for col in ["tema_num", "tema_label"]:
+        if col in df.columns:
+            df[col] = df[col].replace("NAN", pd.NA).ffill()
+
     return df
 
 
@@ -136,11 +183,12 @@ def cargar_todo() -> dict:
     Útil en páginas que necesitan cruzar varias fuentes.
     """
     return {
-        "candidatos":   cargar_candidatos(),
-        "congresistas": cargar_congresistas(),
-        "votaciones":   cargar_votaciones(),
-        "reinfo":       cargar_reinfo(),
-        "leyes":        cargar_leyes(),
+        "candidatos":      cargar_candidatos(),
+        "congresistas":    cargar_congresistas(),
+        "votaciones":      cargar_votaciones(),
+        "reinfo":          cargar_reinfo(),
+        "leyes":           cargar_leyes(),
+        "segunda_vuelta":  cargar_segunda_vuelta(),
     }
 
 
@@ -194,8 +242,7 @@ def candidatos_con_flags() -> pd.DataFrame:
     # Merge con votaciones (congresistas que postulan)
     df = cands.merge(
         votos[["dni", "score_total", "nivel_riesgo", "etiqueta_riesgo",
-               "es_congresista", "tiene_reinfo", "grupo_parl", "leyes_autoria"]
-              + SCORE_COLS + ["bonus_autoria"]],
+               "es_congresista", "tiene_reinfo", "grupo_parl"]],
         on="dni",
         how="left"
     )

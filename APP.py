@@ -190,9 +190,14 @@ SECCIONES = [
         "desc":      "Patrones de votación por bloque y ley, distribución de score, heatmap parlamentario.",
         "pagina":    "analisis tematico",
     },
+    {
+        "titulo":    "Segunda Vuelta 2026",
+        "desc":      "Comparativa de planes de gobierno Fujimori vs. Sánchez Palomino por tema y subtema.",
+        "pagina":    "segunda vuelta",
+    },
 ]
 
-cols = st.columns(3, gap="medium")
+cols = st.columns(4, gap="medium")
 for col, sec in zip(cols, SECCIONES):
     with col:
         st.markdown(
