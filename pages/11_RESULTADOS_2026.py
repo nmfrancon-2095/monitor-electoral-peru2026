@@ -293,22 +293,12 @@ actas_pct_sen  = df_sen_nac_p["actas_contabilizadas_pct"].iloc[0] if len(df_sen_
 actas_pct_dip  = df_dip_p["actas_contabilizadas_pct"].iloc[0] if len(df_dip_p) else 0
 actas_pct_parl = df_parl_p["actas_contabilizadas_pct"].iloc[0] if len(df_parl_p) else 0
 
-# Partidos que superan la valla a nivel nacional (confirmado al 94.8% escrutinio)
-PARTIDOS_VALLA = {
-    "FUERZA POPULAR",
-    "JUNTOS POR EL PERÚ",
-    "RENOVACIÓN POPULAR",
-    "PARTIDO DEL BUEN GOBIERNO",
-    "PARTIDO CÍVICO OBRAS",
-    "AHORA NACIÓN - AN",
-}
-
-# Escaños D'Hondt por cámara — solo partidos que pasaron la valla nacional
+# Escaños D'Hondt por cámara — solo partidos que pasaron la valla completa JNE
+# pasa_umbral=True ya refleja la doble condición (votos + escaños mínimos)
 def _escanos_camara(camara: str) -> dict:
     sub = df_umbral[
         (df_umbral["camara"] == camara) &
-        (df_umbral["pasa_umbral"] == True) &
-        (df_umbral["partido"].isin(PARTIDOS_VALLA))
+        (df_umbral["pasa_umbral"] == True)
     ]
     if camara in ("Senado Regional", "Diputados"):
         return sub.groupby("partido")["escanos"].sum().to_dict()
