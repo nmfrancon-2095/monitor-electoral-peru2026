@@ -293,9 +293,23 @@ actas_pct_sen  = df_sen_nac_p["actas_contabilizadas_pct"].iloc[0] if len(df_sen_
 actas_pct_dip  = df_dip_p["actas_contabilizadas_pct"].iloc[0] if len(df_dip_p) else 0
 actas_pct_parl = df_parl_p["actas_contabilizadas_pct"].iloc[0] if len(df_parl_p) else 0
 
-# Escaños D'Hondt por cámara
+# Partidos que superan la valla a nivel nacional (confirmado al 94.8% escrutinio)
+PARTIDOS_VALLA = {
+    "FUERZA POPULAR",
+    "JUNTOS POR EL PERÚ",
+    "RENOVACIÓN POPULAR",
+    "PARTIDO DEL BUEN GOBIERNO",
+    "PARTIDO CÍVICO OBRAS",
+    "AHORA NACIÓN - AN",
+}
+
+# Escaños D'Hondt por cámara — solo partidos que pasaron la valla nacional
 def _escanos_camara(camara: str) -> dict:
-    sub = df_umbral[(df_umbral["camara"] == camara) & (df_umbral["pasa_umbral"] == True)]
+    sub = df_umbral[
+        (df_umbral["camara"] == camara) &
+        (df_umbral["pasa_umbral"] == True) &
+        (df_umbral["partido"].isin(PARTIDOS_VALLA))
+    ]
     if camara in ("Senado Regional", "Diputados"):
         return sub.groupby("partido")["escanos"].sum().to_dict()
     return sub.set_index("partido")["escanos"].to_dict()
@@ -386,7 +400,8 @@ with tab_resumen:
         top2 = df_pres.head(2)
         for _, row in top2.iterrows():
             color = color_partido(row["nombreAgrupacionPolitica"])
-            nombre = str(row["nombreCandidato"]).title().split(" ")[0].capitalize() + " " + str(row["nombreCandidato"]).title().split(" ")[-1]
+            partes_n = str(row["nombreCandidato"]).title().split(" ")
+            nombre = partes_n[0] + " " + partes_n[1] if len(partes_n) >= 2 else partes_n[0]
             st.markdown(
                 '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
                 '<div style="width:4px;height:40px;background:' + color + ';border-radius:2px;flex-shrink:0;"></div>'
@@ -419,7 +434,7 @@ with tab_resumen:
             unsafe_allow_html=True,
         )
         fig_sen = hemiciclo_plotly(esc_sen_total, total_escanos=60)
-        st.plotly_chart(fig_sen, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig_sen, use_container_width=True, config={"displayModeBar": False}, key="hemiciclo_sen_resumen")
         st.markdown(leyenda_partidos(esc_sen_total), unsafe_allow_html=True)
         st.markdown(
             '<div style="font-size:0.72rem;color:' + COLOR_TEXT_MUTED + ';margin-top:6px;">'
@@ -437,7 +452,7 @@ with tab_resumen:
             unsafe_allow_html=True,
         )
         fig_dip = hemiciclo_plotly(esc_dip, total_escanos=130)
-        st.plotly_chart(fig_dip, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig_dip, use_container_width=True, config={"displayModeBar": False}, key="hemiciclo_dip_resumen")
         st.markdown(leyenda_partidos(esc_dip), unsafe_allow_html=True)
         st.markdown(
             '<div style="font-size:0.72rem;color:' + COLOR_TEXT_MUTED + ';margin-top:6px;">'
@@ -532,7 +547,7 @@ with tab_pres:
             hoverlabel=dict(bgcolor=COLOR_SURFACE, bordercolor=COLOR_BORDER,
                             font=dict(color=COLOR_TEXT_PRIMARY, size=12)),
         )
-        st.plotly_chart(fig_pres, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig_pres, use_container_width=True, config={"displayModeBar": False}, key="bar_presidencial")
 
     # Mapa por departamento
     st.markdown(
@@ -608,7 +623,7 @@ with tab_sen:
                 unsafe_allow_html=True,
             )
             fig_sn = hemiciclo_plotly(esc_sen_nac, total_escanos=30)
-            st.plotly_chart(fig_sn, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig_sn, use_container_width=True, config={"displayModeBar": False}, key="hemiciclo_sen_nac")
             st.markdown(leyenda_partidos(esc_sen_nac, max_cols=2), unsafe_allow_html=True)
 
         with col_tabla2:
@@ -692,7 +707,7 @@ with tab_sen:
                 unsafe_allow_html=True,
             )
             fig_sr = hemiciclo_plotly(esc_sen_reg, total_escanos=30)
-            st.plotly_chart(fig_sr, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig_sr, use_container_width=True, config={"displayModeBar": False}, key="hemiciclo_sen_reg")
             st.markdown(leyenda_partidos(esc_sen_reg, max_cols=2), unsafe_allow_html=True)
 
         with col_info:
@@ -759,7 +774,7 @@ with tab_dip:
             unsafe_allow_html=True,
         )
         fig_dip2 = hemiciclo_plotly(esc_dip, total_escanos=130)
-        st.plotly_chart(fig_dip2, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig_dip2, use_container_width=True, config={"displayModeBar": False}, key="hemiciclo_dip_tab")
 
     with col_leyenda3:
         st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
@@ -819,7 +834,7 @@ with tab_parl:
             unsafe_allow_html=True,
         )
         fig_parl = hemiciclo_plotly(esc_parl, total_escanos=5)
-        st.plotly_chart(fig_parl, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig_parl, use_container_width=True, config={"displayModeBar": False}, key="hemiciclo_parlamento")
         st.markdown(leyenda_partidos(esc_parl, max_cols=2), unsafe_allow_html=True)
 
         # Votos por partido
