@@ -191,13 +191,18 @@ SECCIONES = [
         "pagina":    "analisis tematico",
     },
     {
-        "titulo":    "Segunda Vuelta 2026",
-        "desc":      "Comparativa de planes de gobierno Fujimori vs. Sánchez Palomino por tema y subtema.",
-        "pagina":    "segunda vuelta",
+        "titulo":    "Resultados 2026",
+        "desc":      "Resultados electorales en tiempo real: presidencial, senado, diputados y parlamento andino.",
+        "pagina":    "resultados 2026",
+    },
+    {
+        "titulo":    "Electos — Análisis de riesgo",
+        "desc":      "Candidatos electos proyectados cruzados con REINFO, score legislativo y reelección.",
+        "pagina":    "electos analisis",
     },
 ]
 
-cols = st.columns(4, gap="medium")
+cols = st.columns(3, gap="medium")
 for col, sec in zip(cols, SECCIONES):
     with col:
         st.markdown(
