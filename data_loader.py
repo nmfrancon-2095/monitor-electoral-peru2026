@@ -326,15 +326,181 @@ def cargar_parlamento_partidos() -> pd.DataFrame:
     return df
 
 
+# Tablas de escaños JNE — Resolución 0053-2025-JNE
+_ESCANOS_DIPUTADOS = {
+    "AMAZONAS":2,"ÁNCASH":5,"ANCASH":5,"APURÍMAC":2,"APURIMAC":2,
+    "AREQUIPA":6,"AYACUCHO":3,"CAJAMARCA":6,"CALLAO":4,"CUSCO":5,
+    "HUANCAVELICA":2,"HUÁNUCO":3,"HUANUCO":3,"ICA":4,"JUNÍN":5,"JUNIN":5,
+    "LA LIBERTAD":7,"LAMBAYEQUE":5,"LIMA METROPOLITANA":32,"LIMA PROVINCIAS":4,
+    "LORETO":4,"MADRE DE DIOS":2,"MOQUEGUA":2,"PASCO":2,"PIURA":7,"PUNO":5,
+    "SAN MARTÍN":4,"SAN MARTIN":4,"TACNA":2,"TUMBES":2,"UCAYALI":3,
+    "PERUANOS RESIDENTES EN EL EXTRANJERO":2,
+}
+_ESCANOS_SENADO_REG = {
+    "AMAZONAS":1,"ÁNCASH":1,"ANCASH":1,"APURÍMAC":1,"APURIMAC":1,
+    "AREQUIPA":1,"AYACUCHO":1,"CAJAMARCA":1,"CALLAO":1,"CUSCO":1,
+    "HUANCAVELICA":1,"HUÁNUCO":1,"HUANUCO":1,"ICA":1,"JUNÍN":1,"JUNIN":1,
+    "LA LIBERTAD":1,"LAMBAYEQUE":1,"LIMA METROPOLITANA":4,"LIMA PROVINCIAS":1,
+    "LORETO":1,"MADRE DE DIOS":1,"MOQUEGUA":1,"PASCO":1,"PIURA":1,"PUNO":1,
+    "SAN MARTÍN":1,"SAN MARTIN":1,"TACNA":1,"TUMBES":1,"UCAYALI":1,
+    "PERUANOS RESIDENTES EN EL EXTRANJERO":1,
+}
+_UMBRAL_VOTOS_PCT  = 5.0
+_UMBRAL_ESC_SEN    = 3
+_UMBRAL_ESC_DIP    = 7
+_ESPECIALES        = {80, 81, 82}
+
+
+def _dhondt_puro(votos: dict, n_escanos: int, elegibles: set = None) -> dict:
+    """D'Hondt sin umbral propio. elegibles filtra quién participa."""
+    participantes = {p: v for p, v in votos.items()
+                     if v > 0 and (elegibles is None or p in elegibles)}
+    if not participantes or n_escanos <= 0:
+        return {p: 0 for p in votos}
+    cocientes = [(v / d, p) for p, v in participantes.items()
+                 for d in range(1, n_escanos + 1)]
+    cocientes.sort(reverse=True)
+    asignados = {}
+    for _, p in cocientes[:n_escanos]:
+        asignados[p] = asignados.get(p, 0) + 1
+    return {p: asignados.get(p, 0) for p in votos}
+
+
+def _lookup_esc(circ: str, mapa: dict) -> int:
+    import unicodedata
+    def _strip(s):
+        return "".join(c for c in unicodedata.normalize("NFD", s.upper().strip())
+                       if unicodedata.category(c) != "Mn")
+    n = mapa.get(circ.strip().upper())
+    if n is None:
+        plain = _strip(circ)
+        n = next((v for k, v in mapa.items() if _strip(k) == plain), 1)
+    return n
+
+
 @st.cache_data
 def cargar_umbral_escanos() -> pd.DataFrame:
     """
-    Hoja 11_UMBRAL_ESCANOS — resultado D'Hondt por cámara, circunscripción y partido.
-    Columnas clave: camara, circunscripcion, partido, votos,
-                    pct_validos, pasa_umbral, escanos, escanos_circunscripcion
+    Recalcula D'Hondt con la doble valla JNE (Acuerdo 12/03/2026) directamente
+    desde las hojas de partidos del Excel ONPE.
+
+    Doble condición concurrente:
+      SENADO:    ≥ 5% votos (SN+SR combinados) Y ≥ 3 senadores
+      DIPUTADOS: ≥ 5% votos nacionales           Y ≥ 7 diputados
+
+    Siempre recalcula desde cero — no depende de la hoja 11_UMBRAL_ESCANOS
+    del Excel, que puede venir de una versión anterior del extractor.
     """
-    df = pd.read_excel(ONPE_FILE, sheet_name="11_UMBRAL_ESCANOS")
-    return df
+    # Cargar hojas de partidos (ya limpias de especiales por _onpe_sin_especiales)
+    df_sn  = cargar_senado_nacional_partidos()
+    df_sr  = cargar_senado_regional_partidos()
+    df_dip = cargar_diputados_partidos()
+    df_pa  = cargar_parlamento_partidos()
+
+    # ── Votos nacionales combinados para la valla ─────────────────────────────
+    # Senado: SN + SR
+    votos_sn  = df_sn.groupby("nombreAgrupacionPolitica")["totalVotosValidos"].sum()
+    total_sn  = int(df_sn["votos_validos_total"].iloc[0]) if len(df_sn) else 0
+
+    votos_sr_nac = df_sr.groupby("nombreAgrupacionPolitica")["totalVotosValidos"].sum()
+    # total SR = suma de primer registro de cada distrito
+    total_sr = int(df_sr.groupby("distrito_electoral")["votos_validos_total"].first().sum())
+
+    votos_sen = votos_sn.add(votos_sr_nac, fill_value=0)
+    total_sen = total_sn + total_sr
+    umbral_votos_sen = total_sen * _UMBRAL_VOTOS_PCT / 100
+
+    # Diputados
+    votos_dip_nac = df_dip.groupby("nombreAgrupacionPolitica")["totalVotosValidos"].sum()
+    total_dip = int(df_dip.groupby("circunscripcion")["votos_validos_total"].first().sum())
+    umbral_votos_dip = total_dip * _UMBRAL_VOTOS_PCT / 100
+
+    # ── Escaños preliminares (sin valla) para verificar requisito mínimo ─────
+    # Senado nacional
+    esc_sn_pre = _dhondt_puro(votos_sn.to_dict(), 30)
+    # Senado regional (suma por circunscripción)
+    esc_sr_pre = {}
+    for circ, sub in df_sr.groupby("distrito_electoral"):
+        n = _lookup_esc(circ, _ESCANOS_SENADO_REG)
+        v = sub.groupby("nombreAgrupacionPolitica")["totalVotosValidos"].sum().to_dict()
+        for p, e in _dhondt_puro(v, n).items():
+            esc_sr_pre[p] = esc_sr_pre.get(p, 0) + e
+    esc_sen_pre = {p: esc_sn_pre.get(p, 0) + esc_sr_pre.get(p, 0)
+                   for p in set(list(esc_sn_pre) + list(esc_sr_pre))}
+
+    # Diputados (suma por circunscripción)
+    esc_dip_pre = {}
+    for circ, sub in df_dip.groupby("circunscripcion"):
+        n = _lookup_esc(circ, _ESCANOS_DIPUTADOS)
+        v = sub.groupby("nombreAgrupacionPolitica")["totalVotosValidos"].sum().to_dict()
+        for p, e in _dhondt_puro(v, n).items():
+            esc_dip_pre[p] = esc_dip_pre.get(p, 0) + e
+
+    # ── Doble valla ───────────────────────────────────────────────────────────
+    elegibles_sen = {
+        p for p, v in votos_sen.items()
+        if (v / total_sen * 100 >= _UMBRAL_VOTOS_PCT if total_sen else False)
+        and esc_sen_pre.get(p, 0) >= _UMBRAL_ESC_SEN
+    }
+    elegibles_dip = {
+        p for p, v in votos_dip_nac.items()
+        if (v / total_dip * 100 >= _UMBRAL_VOTOS_PCT if total_dip else False)
+        and esc_dip_pre.get(p, 0) >= _UMBRAL_ESC_DIP
+    }
+
+    filas = []
+    ts = str(df_sn["timestamp_extraccion"].iloc[0]) if "timestamp_extraccion" in df_sn.columns and len(df_sn) else ""
+
+    # ── Senado Nacional ───────────────────────────────────────────────────────
+    votos_sn_d = votos_sn.to_dict()
+    esc_sn = _dhondt_puro(votos_sn_d, 30, elegibles_sen)
+    for p, v in votos_sn_d.items():
+        pct = v / total_sen * 100 if total_sen else 0
+        filas.append({"camara": "Senado Nacional", "circunscripcion": "NACIONAL",
+                      "escanos_circunscripcion": 30, "partido": p, "votos": v,
+                      "pct_validos": round(pct, 2),
+                      "pasa_umbral": p in elegibles_sen,
+                      "escanos": esc_sn.get(p, 0), "timestamp_extraccion": ts})
+
+    # ── Senado Regional ───────────────────────────────────────────────────────
+    for circ, sub in df_sr.groupby("distrito_electoral"):
+        n = _lookup_esc(circ, _ESCANOS_SENADO_REG)
+        v_circ = sub.groupby("nombreAgrupacionPolitica")["totalVotosValidos"].sum().to_dict()
+        total_circ = int(sub["votos_validos_total"].iloc[0])
+        esc_circ = _dhondt_puro(v_circ, n, elegibles_sen)
+        for p, v in v_circ.items():
+            filas.append({"camara": "Senado Regional", "circunscripcion": circ,
+                          "escanos_circunscripcion": n, "partido": p, "votos": v,
+                          "pct_validos": round(v / total_circ * 100 if total_circ else 0, 2),
+                          "pasa_umbral": p in elegibles_sen,
+                          "escanos": esc_circ.get(p, 0), "timestamp_extraccion": ts})
+
+    # ── Diputados ─────────────────────────────────────────────────────────────
+    for circ, sub in df_dip.groupby("circunscripcion"):
+        n = _lookup_esc(circ, _ESCANOS_DIPUTADOS)
+        v_circ = sub.groupby("nombreAgrupacionPolitica")["totalVotosValidos"].sum().to_dict()
+        total_circ = int(sub["votos_validos_total"].iloc[0])
+        esc_circ = _dhondt_puro(v_circ, n, elegibles_dip)
+        for p, v in v_circ.items():
+            filas.append({"camara": "Diputados", "circunscripcion": circ,
+                          "escanos_circunscripcion": n, "partido": p, "votos": v,
+                          "pct_validos": round(v / total_circ * 100 if total_circ else 0, 2),
+                          "pasa_umbral": p in elegibles_dip,
+                          "escanos": esc_circ.get(p, 0), "timestamp_extraccion": ts})
+
+    # ── Parlamento Andino ─────────────────────────────────────────────────────
+    votos_pa_d = df_pa.groupby("nombreAgrupacionPolitica")["totalVotosValidos"].sum().to_dict()
+    total_pa = int(df_pa["votos_validos_total"].iloc[0]) if len(df_pa) else 0
+    esc_pa = _dhondt_puro(votos_pa_d, 5)
+    for p, v in votos_pa_d.items():
+        pct = v / total_pa * 100 if total_pa else 0
+        filas.append({"camara": "Parlamento Andino", "circunscripcion": "NACIONAL",
+                      "escanos_circunscripcion": 5, "partido": p, "votos": v,
+                      "pct_validos": round(pct, 2),
+                      "pasa_umbral": pct >= _UMBRAL_VOTOS_PCT,
+                      "escanos": esc_pa.get(p, 0), "timestamp_extraccion": ts})
+
+    return pd.DataFrame(filas) if filas else pd.DataFrame()
 
 
 @st.cache_data
