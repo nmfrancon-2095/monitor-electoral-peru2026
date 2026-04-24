@@ -1,16 +1,7 @@
 # ============================================================
 # pages/1_Overview.py — Monitor Electoral Perú 2026
-# Resumen ejecutivo · v3.0 Forensic Editorial
-#
-# Cambios de diseño (solo gráficos/layout, lógica intacta):
-#   - Masthead institucional con regla navy superior
-#   - Page title block con eyebrow + serif + regla navy
-#   - KPIs: hero-card con regla navy top + tipografía serif
-#   - Cards de riesgo sin gradientes, regla vertical izquierda
-#   - Charts: CHART_LAYOUT_BASE de v3.0 (paper cálido, oro grid)
-#   - Bar charts con extremos redondeados (BAR_CORNER_RADIUS)
-#   - Colores de partido desde color_partido() dinámicamente
-#   - Border-radius 0-2px, sin sombras, reglas sobre shadows
+# Resumen ejecutivo: KPIs jerárquicos, mapa, distribución de
+# riesgo, votos por bloque, alertas de congresistas.
 # ============================================================
 
 import streamlit as st
@@ -38,6 +29,7 @@ from config import (
     REGIONES_PRIORITARIAS, LEYES_COLS, GLOBAL_CSS,
     SCORE_ALTO_MIN, SCORE_MEDIO_MIN,
 )
+
 from data_loader import (
     cargar_candidatos, cargar_votaciones, cargar_reinfo,
     cargar_leyes, resumen_kpis, candidatos_con_flags,
@@ -48,7 +40,11 @@ FONT_SERIF = "'Source Serif 4', Georgia, 'Times New Roman', serif"
 FONT_SANS  = "'DM Sans', system-ui, -apple-system, sans-serif"
 
 def layout_override(overrides: dict) -> dict:
-    """Combina CHART_LAYOUT_BASE con overrides puntuales sin conflicto."""
+    """
+    Combina CHART_LAYOUT_BASE con overrides puntuales sin conflicto.
+    Úsalo en update_layout(**layout_override({...})) en vez de
+    pasar **CHART_LAYOUT_BASE y kwargs por separado.
+    """
     base = {k: v for k, v in CHART_LAYOUT_BASE.items()}
     base.update(overrides)
     return base
@@ -78,7 +74,9 @@ with st.spinner("Cargando datos..."):
     leyes_df = cargar_leyes()
 
 # -------------------------------------------------------
-# SECTION: Masthead + Page title (v3.0)
+# SECTION: Header de página
+# Tipografía con peso como sistema de jerarquía, sin emoji
+# como ícono principal (solo en indicadores de estado).
 # -------------------------------------------------------
 st.markdown(
     f"""
@@ -112,9 +110,17 @@ st.markdown(
 )
 
 # -------------------------------------------------------
-# SECTION: KPIs — jerarquía editorial (1 hero + 3 secundarios)
+# SECTION: KPIs — jerarquía visual intencional
+#
+# Principio: no 5 cards idénticas (anti-patrón "hero metric").
+# Estructura: 1 protagonista (total candidatos, dato de escala)
+# + 4 secundarias más compactas.
+# El protagonista establece contexto; los secundarios señalan
+# lo que importa analíticamente.
 # -------------------------------------------------------
-kpi_main, kpi_gap, k1, k2, k3 = st.columns([2.2, 0.15, 1, 1, 1])
+
+# Fila de KPIs: col grande + 4 pequeñas
+kpi_main, kpi_gap, k1, k2, k3 = st.columns([2.2, 0.2, 1, 1, 1])
 
 with kpi_main:
     st.markdown(
@@ -144,7 +150,7 @@ with kpi_main:
         unsafe_allow_html=True,
     )
 
-# Helper para KPIs secundarias (forensic style: regla top color, fondo papel)
+# Helper para las 4 KPIs secundarias
 def kpi_secundaria(label, valor, nota, color_rule=None):
     rule = color_rule or COLOR_PRIMARY
     val_color = color_rule or COLOR_TEXT_PRIMARY
@@ -461,12 +467,21 @@ st.markdown(
 col_bloques, col_reinfo_viz = st.columns([2, 1], gap="large")
 
 with col_bloques:
-    st.markdown(section_header(
-        "ANÁLISIS DE VOTACIONES",
-        "Votos a favor por ley",
-        "% de congresistas postulantes que votaron a favor · agrupado por bloque temático",
-    ), unsafe_allow_html=True)
+    st.markdown(
+        f"""<div style="font-size:0.75rem; font-weight:700; letter-spacing:0.08em;
+                        text-transform:uppercase; color:{COLOR_TEXT_MUTED};
+                        margin-bottom:4px;">Análisis de votaciones</div>
+            <div class="section-header" style="margin-bottom:4px;">
+                Votos a favor por ley</div>
+            <div class="section-subheader">
+                % de congresistas postulantes que votaron a favor · agrupado por bloque temático
+            </div>""",
+        unsafe_allow_html=True,
+    )
 
+    # Calcular % A FAVOR por ley
+    # Los colores por bloque vienen del config centralizado (COLOR_BLOQUE)
+    # para que cualquier cambio de paleta se propague desde un solo lugar.
     resultados = []
     for col in LEYES_COLS:
         if col not in votos.columns:
@@ -491,8 +506,10 @@ with col_bloques:
     res_df["color"] = res_df["bloque"].map(colores_bloque).fillna(COLOR_RIESGO_NONE)
     res_df["pct_label"] = res_df["a_favor_pct"].apply(lambda x: f"{x:.0f}%")
 
+    # Margen izquierdo dinámico según nombre de ley más largo
     max_chars_leyes = res_df["ley"].str.len().max()
     margen_leyes = min(int(max_chars_leyes * 6.2), 260)
+
     altura_leyes = max(380, len(res_df) * 34 + 40)
 
     fig_leyes = go.Figure()
@@ -503,10 +520,11 @@ with col_bloques:
             y=grupo["ley"],
             orientation="h",
             name=bloque_nombre.capitalize(),
-            marker=dict(color=color_b, line=dict(width=0)),
+            marker_color=color_b,
             text=grupo["pct_label"],
             textposition="outside",
-            textfont=dict(family=FONT_SERIF, size=12, color=COLOR_TEXT_PRIMARY),
+            textfont=dict(size=11, color=COLOR_TEXT_PRIMARY,
+                          family="'Plus Jakarta Sans', system-ui, sans-serif"),
             customdata=grupo[["n_favor", "clave"]].values,
             hovertemplate=(
                 "<b>%{customdata[1]}</b> %{y}<br>"
@@ -514,10 +532,6 @@ with col_bloques:
             ),
             cliponaxis=False,
         ))
-    try:
-        fig_leyes.update_traces(marker_cornerradius=BAR_CORNER_RADIUS)
-    except Exception:
-        pass
 
     fig_leyes.update_layout(
         height=altura_leyes,
@@ -525,31 +539,41 @@ with col_bloques:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         barmode="overlay",
-        font=dict(family=FONT_SANS, size=11, color=COLOR_TEXT_PRIMARY),
+        font=dict(family="'Plus Jakarta Sans', system-ui, sans-serif",
+                  size=11, color=COLOR_TEXT_PRIMARY),
         legend=dict(
             orientation="h",
             y=-0.06, x=0,
-            font=dict(family=FONT_SANS, size=10.5, color=COLOR_TEXT_SECONDARY),
+            font=dict(size=10),
             bgcolor="rgba(0,0,0,0)",
         ),
         xaxis=dict(
-            visible=False, showgrid=False, zeroline=False,
+            visible=False,
+            showgrid=False,
+            zeroline=False,
             range=[0, 115],
         ),
         yaxis=dict(
-            showgrid=False, zeroline=False,
-            tickfont=dict(family=FONT_SANS, size=10, color=COLOR_TEXT_SECONDARY),
+            showgrid=False,
+            zeroline=False,
+            tickfont=dict(size=10, color=COLOR_TEXT_SECONDARY),
             automargin=False,
         ),
     )
     st.plotly_chart(fig_leyes, use_container_width=True)
 
 with col_reinfo_viz:
-    st.markdown(section_header(
-        "MINERÍA INFORMAL",
-        "Vínculos REINFO",
-        "Candidatos con derechos mineros registrados · top departamentos",
-    ), unsafe_allow_html=True)
+    st.markdown(
+        f"""<div style="font-size:0.75rem; font-weight:700; letter-spacing:0.08em;
+                        text-transform:uppercase; color:{COLOR_TEXT_MUTED};
+                        margin-bottom:4px;">Minería informal</div>
+            <div class="section-header" style="margin-bottom:4px;">
+                Vínculos REINFO</div>
+            <div class="section-subheader">
+                Candidatos con derechos mineros registrados · top departamentos
+            </div>""",
+        unsafe_allow_html=True,
+    )
 
     dptos = (
         reinfo["dptos_mineros"].str.split(";").explode()
@@ -561,6 +585,7 @@ with col_reinfo_viz:
 
     max_chars_dptos = dptos["departamento"].str.len().max()
     margen_reinfo = min(int(max_chars_dptos * 6.5), 180)
+
     altura_reinfo = max(260, len(dptos) * 34 + 20)
 
     fig_reinfo = go.Figure()
@@ -568,51 +593,54 @@ with col_reinfo_viz:
         x=dptos["candidatos"],
         y=dptos["departamento"],
         orientation="h",
-        marker=dict(color=COLOR_REINFO, line=dict(width=0)),
+        marker_color=COLOR_REINFO,
         text=dptos["candidatos"],
         textposition="outside",
-        textfont=dict(family=FONT_SERIF, size=12, color=COLOR_TEXT_PRIMARY),
+        textfont=dict(size=11, color=COLOR_TEXT_PRIMARY,
+                      family="'Plus Jakarta Sans', system-ui, sans-serif"),
         hovertemplate="<b>%{y}</b><br>%{x} candidatos con REINFO<extra></extra>",
         cliponaxis=False,
     ))
-    try:
-        fig_reinfo.update_traces(marker_cornerradius=BAR_CORNER_RADIUS)
-    except Exception:
-        pass
-
     fig_reinfo.update_layout(
         height=altura_reinfo,
         margin=dict(l=margen_reinfo, r=40, t=4, b=0),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
-        font=dict(family=FONT_SANS, size=11, color=COLOR_TEXT_PRIMARY),
+        font=dict(family="'Plus Jakarta Sans', system-ui, sans-serif",
+                  size=11, color=COLOR_TEXT_PRIMARY),
         xaxis=dict(
-            visible=False, showgrid=False, zeroline=False,
+            visible=False,
+            showgrid=False,
+            zeroline=False,
             range=[0, dptos["candidatos"].max() * 1.3],
         ),
         yaxis=dict(
-            showgrid=False, zeroline=False,
-            tickfont=dict(family=FONT_SANS, size=10.5, color=COLOR_TEXT_SECONDARY),
+            showgrid=False,
+            zeroline=False,
+            tickfont=dict(size=10.5, color=COLOR_TEXT_SECONDARY),
             automargin=False,
         ),
     )
     st.plotly_chart(fig_reinfo, use_container_width=True)
 
 
-# Separador editorial
 st.markdown(
-    f"""<div style="margin:32px 0 28px 0;display:flex;align-items:center;gap:12px;">
-          <div style="flex:1;height:1px;background:{COLOR_BORDER};"></div>
-          <div style="width:6px;height:6px;background:{COLOR_GOLD};
-                      transform:rotate(45deg);"></div>
-          <div style="flex:1;height:1px;background:{COLOR_BORDER};"></div>
-       </div>""",
+    f'<div style="border-top:1px solid {COLOR_BORDER}; margin:24px 0;"></div>',
     unsafe_allow_html=True,
 )
 
 # -------------------------------------------------------
 # SECTION: KPIs analíticos — leyes clave
+#
+# Leyes seleccionadas por relevancia para el proyecto:
+#   - 4 pro-crimen de mayor impacto (las más votadas a favor)
+#   - APCI (espacio cívico)
+#   - REINFO 5a ampliación (la más reciente)
+#   - Bicameralidad (reforma institucional)
+#
+# Se calcula % de congresistas postulantes que votaron A FAVOR
+# sobre el total que emitió voto válido (A FAVOR + EN CONTRA + ABSTENCIÓN).
 # -------------------------------------------------------
 st.markdown(
     f"""
