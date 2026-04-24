@@ -419,6 +419,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+col_refresh, _ = st.columns([1, 4])
+with col_refresh:
+    if st.button("🔄 Actualizar datos", key="refresh_cache"):
+        st.cache_data.clear()
+        st.rerun()
+        
 st.markdown(
     '<div style="border-top:2px solid ' + COLOR_BORDER + ';margin-bottom:24px;"></div>',
     unsafe_allow_html=True,
