@@ -367,7 +367,7 @@ with col_riesgo:
         .groupby("partido").size()
         .reset_index(name="n")
         .sort_values("n", ascending=True)
-        .tail(8)
+        .tail(12)
     )
     riesgo_partido["partido_label"] = riesgo_partido["partido"].str.upper()
 
