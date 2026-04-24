@@ -125,7 +125,7 @@ with st.sidebar:
         f"""
         <div style="font-size:0.70rem; color:rgba(255,255,255,0.50);
                     margin-top:8px; line-height:1.6;">
-            {APP_VERSION} · JNE · REINFO · Congreso del Perú
+            {APP_VERSION} · JNE · REINFO · Congreso del Perú · ONPE
         </div>
         """,
         unsafe_allow_html=True,
