@@ -262,6 +262,85 @@ def tabla_candidatos_html(df: pd.DataFrame, col_circ: str = None,
     )
 
 
+def _csv_download(df: pd.DataFrame, label: str, filename: str, key: str):
+    """Botón de descarga CSV para cualquier DataFrame."""
+    cols_excluir = [c for c in df.columns if c.startswith("timestamp") or c.startswith("_")]
+    df_clean = df.drop(columns=cols_excluir, errors="ignore")
+    csv = df_clean.to_csv(index=False, encoding="utf-8-sig")
+    st.download_button(
+        label=f"⬇ {label}",
+        data=csv.encode("utf-8-sig"),
+        file_name=filename,
+        mime="text/csv",
+        key=key,
+        use_container_width=False,
+    )
+
+
+def _filtro_partido_electos(df: pd.DataFrame, col_circuns: str | None,
+                             camara_label: str, key_prefix: str):
+    """
+    Muestra selector de partido + tabla de electos filtrada + descarga.
+    df debe tener columna electo_proyectado y nombreAgrupacionPolitica.
+    """
+    PARTIDOS_PASARON = sorted(
+        df[df["electo_proyectado"] == True]["nombreAgrupacionPolitica"].unique()
+    )
+    if not PARTIDOS_PASARON:
+        st.markdown(
+            '<p style="color:' + COLOR_TEXT_MUTED + ';font-size:0.82rem;">Sin datos de electos aún.</p>',
+            unsafe_allow_html=True
+        )
+        return
+
+    opciones = ["— Todos los partidos —"] + PARTIDOS_PASARON
+    partido_sel = st.selectbox(
+        "Filtrar por partido",
+        opciones,
+        key=f"{key_prefix}_partido_sel",
+    )
+    solo_electos_chk = st.checkbox(
+        "Solo electos proyectados",
+        value=True,
+        key=f"{key_prefix}_solo_electos",
+    )
+
+    df_filt = df.copy()
+    if partido_sel != "— Todos los partidos —":
+        df_filt = df_filt[df_filt["nombreAgrupacionPolitica"] == partido_sel]
+    if solo_electos_chk:
+        df_filt = df_filt[df_filt["electo_proyectado"] == True]
+
+    n_electos = int(df_filt["electo_proyectado"].sum()) if "electo_proyectado" in df_filt.columns else 0
+    n_total   = len(df_filt)
+
+    col_info, col_dl = st.columns([3, 1])
+    with col_info:
+        st.markdown(
+            f'<div style="font-size:0.78rem;color:{COLOR_TEXT_SECONDARY};margin-bottom:8px;">'
+            f'Mostrando <strong>{n_total}</strong> candidatos'
+            + (f' · <strong style="color:#1E8A4A">{n_electos} electos proyectados</strong>' if n_electos else "")
+            + f'</div>',
+            unsafe_allow_html=True,
+        )
+    with col_dl:
+        partido_fn = partido_sel.replace("— Todos los partidos —", "todos").replace(" ", "_")[:20]
+        _csv_download(
+            df_filt,
+            "Descargar CSV",
+            f"{camara_label}_{partido_fn}.csv",
+            key=f"{key_prefix}_dl",
+        )
+
+    st.markdown(
+        tabla_candidatos_html(
+            df_filt.sort_values("totalVotosValidos", ascending=False).head(80),
+            col_circ=col_circuns if partido_sel == "— Todos los partidos —" else None,
+        ),
+        unsafe_allow_html=True,
+    )
+
+
 # ── Carga de datos ────────────────────────────────────────────────────────────
 try:
     df_pres         = cargar_presidenciales()
@@ -620,17 +699,18 @@ with tab_sen:
             st.markdown(
                 '<div style="font-size:0.68rem;font-weight:700;letter-spacing:0.10em;'
                 'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';margin-bottom:6px;">'
-                'Candidatos más votados — datos preliminares</div>',
+                'Candidatos — datos preliminares</div>',
                 unsafe_allow_html=True,
             )
             st.markdown(
                 '<div style="background:#FEF7EC;border:1px solid #F0C97A;border-radius:5px;'
-                'padding:6px 10px;margin-bottom:8px;font-size:0.74rem;color:#7A4A00;">'
+                'padding:6px 10px;margin-bottom:10px;font-size:0.74rem;color:#7A4A00;">'
                 'ONPE expone los top-56 candidatos de este endpoint. Los electos marcados son preliminares.'
                 '</div>',
                 unsafe_allow_html=True,
             )
-            st.markdown(tabla_candidatos_html(df_cand_sn.head(30)), unsafe_allow_html=True)
+            _filtro_partido_electos(df_cand_sn, col_circuns=None,
+                                    camara_label="senado_nacional", key_prefix="sn")
 
         # Votos por partido
         st.markdown(
@@ -719,19 +799,53 @@ with tab_sen:
                     unsafe_allow_html=True,
                 )
 
-        # Filtro por distrito
+        # Filtro por partido + distrito
         st.markdown(
             '<div style="border-top:1px solid ' + COLOR_BORDER + ';margin:20px 0 14px 0;"></div>',
             unsafe_allow_html=True,
         )
-        distritos = sorted(df_cand_sr["distrito_electoral"].unique())
-        dist_sel = st.selectbox("Ver candidatos por distrito electoral", ["— Todos —"] + distritos,
-                                key="sel_dist_sr")
-        df_sr_filt = (df_cand_sr if dist_sel == "— Todos —"
-                      else df_cand_sr[df_cand_sr["distrito_electoral"] == dist_sel])
+        st.markdown(
+            '<div style="font-size:0.68rem;font-weight:700;letter-spacing:0.10em;'
+            'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';margin-bottom:10px;">'
+            'Explorar candidatos</div>',
+            unsafe_allow_html=True,
+        )
+        col_f1, col_f2 = st.columns(2)
+        with col_f1:
+            distritos = sorted(df_cand_sr["distrito_electoral"].unique())
+            dist_sel = st.selectbox("Distrito electoral", ["— Todos —"] + distritos,
+                                    key="sel_dist_sr")
+        with col_f2:
+            partidos_sr = ["— Todos —"] + sorted(df_cand_sr["nombreAgrupacionPolitica"].unique())
+            partido_sr_sel = st.selectbox("Partido", partidos_sr, key="sel_partido_sr")
+
+        solo_electos_sr = st.checkbox("Solo electos proyectados", value=False, key="ck_electos_sr")
+
+        df_sr_filt = df_cand_sr.copy()
+        if dist_sel != "— Todos —":
+            df_sr_filt = df_sr_filt[df_sr_filt["distrito_electoral"] == dist_sel]
+        if partido_sr_sel != "— Todos —":
+            df_sr_filt = df_sr_filt[df_sr_filt["nombreAgrupacionPolitica"] == partido_sr_sel]
+        if solo_electos_sr:
+            df_sr_filt = df_sr_filt[df_sr_filt["electo_proyectado"] == True]
+
+        col_info_sr, col_dl_sr = st.columns([3, 1])
+        n_sr = int(df_sr_filt["electo_proyectado"].sum())
+        with col_info_sr:
+            st.markdown(
+                f'<div style="font-size:0.78rem;color:{COLOR_TEXT_SECONDARY};margin-bottom:8px;">'
+                f'<strong>{len(df_sr_filt)}</strong> candidatos'
+                + (f' · <strong style="color:#1E8A4A">{n_sr} electos proyectados</strong>' if n_sr else "")
+                + '</div>', unsafe_allow_html=True)
+        with col_dl_sr:
+            _csv_download(df_sr_filt, "Descargar CSV",
+                          f"senado_regional_{dist_sel[:15]}_{partido_sr_sel[:10]}.csv",
+                          key="dl_sr")
+
+        col_circ_sr = "distrito_electoral" if dist_sel == "— Todos —" else None
         st.markdown(tabla_candidatos_html(
-            df_sr_filt.sort_values("totalVotosValidos", ascending=False).head(50),
-            col_circ="distrito_electoral" if dist_sel == "— Todos —" else None,
+            df_sr_filt.sort_values("totalVotosValidos", ascending=False).head(60),
+            col_circ=col_circ_sr,
         ), unsafe_allow_html=True)
 
 
@@ -782,19 +896,41 @@ with tab_dip:
     )
 
     # Filtro por circunscripción
-    circs = sorted(df_cand_dip["circunscripcion"].unique())
-    circ_sel = st.selectbox("Ver candidatos por circunscripción", ["— Todas —"] + circs,
-                            key="sel_circ_dip")
-    solo_electos = st.checkbox("Solo electos proyectados", key="ck_electos_dip")
+    col_f1d, col_f2d = st.columns(2)
+    with col_f1d:
+        circs = sorted(df_cand_dip["circunscripcion"].unique())
+        circ_sel = st.selectbox("Circunscripción", ["— Todas —"] + circs, key="sel_circ_dip")
+    with col_f2d:
+        partidos_dip = ["— Todos —"] + sorted(df_cand_dip["nombreAgrupacionPolitica"].unique())
+        partido_dip_sel = st.selectbox("Partido", partidos_dip, key="sel_partido_dip")
 
-    df_dip_filt = (df_cand_dip if circ_sel == "— Todas —"
-                   else df_cand_dip[df_cand_dip["circunscripcion"] == circ_sel])
+    solo_electos = st.checkbox("Solo electos proyectados", value=False, key="ck_electos_dip")
+
+    df_dip_filt = df_cand_dip.copy()
+    if circ_sel != "— Todas —":
+        df_dip_filt = df_dip_filt[df_dip_filt["circunscripcion"] == circ_sel]
+    if partido_dip_sel != "— Todos —":
+        df_dip_filt = df_dip_filt[df_dip_filt["nombreAgrupacionPolitica"] == partido_dip_sel]
     if solo_electos:
         df_dip_filt = df_dip_filt[df_dip_filt["electo_proyectado"] == True]
 
+    col_info_dip, col_dl_dip = st.columns([3, 1])
+    n_dip = int(df_dip_filt["electo_proyectado"].sum())
+    with col_info_dip:
+        st.markdown(
+            f'<div style="font-size:0.78rem;color:{COLOR_TEXT_SECONDARY};margin-bottom:8px;">'
+            f'<strong>{len(df_dip_filt)}</strong> candidatos'
+            + (f' · <strong style="color:#1E8A4A">{n_dip} electos proyectados</strong>' if n_dip else "")
+            + '</div>', unsafe_allow_html=True)
+    with col_dl_dip:
+        _csv_download(df_dip_filt, "Descargar CSV",
+                      f"diputados_{circ_sel[:15]}_{partido_dip_sel[:10]}.csv",
+                      key="dl_dip")
+
+    col_circ_dip = "circunscripcion" if circ_sel == "— Todas —" else None
     st.markdown(tabla_candidatos_html(
-        df_dip_filt.sort_values("totalVotosValidos", ascending=False).head(60),
-        col_circ="circunscripcion" if circ_sel == "— Todas —" else None,
+        df_dip_filt.sort_values("totalVotosValidos", ascending=False).head(80),
+        col_circ=col_circ_dip,
     ), unsafe_allow_html=True)
 
 
@@ -868,7 +1004,12 @@ with tab_parl:
             'Candidatos por partido</div>',
             unsafe_allow_html=True,
         )
-        st.markdown(tabla_candidatos_html(df_cand_parl.head(30)), unsafe_allow_html=True)
+        col_dl_parl, _ = st.columns([1, 2])
+        with col_dl_parl:
+            _csv_download(df_cand_parl, "Descargar CSV",
+                          "parlamento_andino_candidatos.csv", key="dl_parl")
+        _filtro_partido_electos(df_cand_parl, col_circuns=None,
+                                camara_label="parlamento_andino", key_prefix="parl")
 
 
 # ── Footer ────────────────────────────────────────────────────────────────────

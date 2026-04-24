@@ -503,45 +503,69 @@ def cargar_umbral_escanos() -> pd.DataFrame:
     return pd.DataFrame(filas) if filas else pd.DataFrame()
 
 
+def _recalcular_electos(df: pd.DataFrame,
+                        umbral_df: pd.DataFrame,
+                        camara: str,
+                        col_circuns: str | None) -> pd.DataFrame:
+    """
+    Recalcula electo_proyectado para cualquier hoja de candidatos usando
+    el resultado de cargar_umbral_escanos() (que aplica la doble valla JNE).
+
+    Lógica:
+      1. Merge por (partido, circunscripción) para obtener pasa_umbral y escanos
+      2. Ranking por votos dentro de cada (partido, circunscripción)
+      3. electo = pasa_umbral AND ranking <= escanos_partido
+    """
+    sub = umbral_df[umbral_df["camara"] == camara][
+        ["partido", "circunscripcion", "pasa_umbral", "escanos"]
+    ].copy()
+
+    # Para cámaras nacionales (senado nac, parlamento) usar circunscripcion=NACIONAL
+    if col_circuns is None:
+        df["_circ_join"] = "NACIONAL"
+    else:
+        df["_circ_join"] = df[col_circuns].astype(str).str.strip().str.upper()
+
+    sub["_circ_join"] = sub["circunscripcion"].astype(str).str.strip().str.upper()
+    sub = sub.rename(columns={"partido": "nombreAgrupacionPolitica",
+                               "pasa_umbral": "_pasa",
+                               "escanos": "_esc"})
+
+    df = df.drop(columns=["pasa_umbral_partido", "escanos_partido",
+                           "electo_proyectado", "ranking_preferencial"],
+                 errors="ignore")
+
+    df = df.merge(sub[["nombreAgrupacionPolitica", "_circ_join", "_pasa", "_esc"]],
+                  on=["nombreAgrupacionPolitica", "_circ_join"], how="left")
+
+    df["pasa_umbral_partido"] = df["_pasa"].fillna(False).astype(bool)
+    df["escanos_partido"]     = df["_esc"].fillna(0).astype(int)
+    df = df.drop(columns=["_pasa", "_esc", "_circ_join"])
+
+    # Ranking preferencial dentro de (partido, circunscripción)
+    group_cols = ["nombreAgrupacionPolitica"] + ([col_circuns] if col_circuns else [])
+    df = df.sort_values(group_cols + ["totalVotosValidos"],
+                        ascending=[True] * len(group_cols) + [False])
+    df["ranking_preferencial"] = df.groupby(group_cols).cumcount() + 1
+
+    df["electo_proyectado"] = (
+        df["pasa_umbral_partido"] &
+        (df["ranking_preferencial"] <= df["escanos_partido"])
+    )
+    return df
+
+
 @st.cache_data
 def cargar_candidatos_senado_nac() -> pd.DataFrame:
     """
     Hoja 07_CAND_SENADO_NAC — candidatos individuales al senado nacional.
     Nota: ONPE solo expone los top-56 más votados (limitación del endpoint).
-    La columna electo_proyectado se recalcula aquí cruzando con el umbral.
-    Columnas clave: nombreCandidato, dniCandidato, nombreAgrupacionPolitica,
-                    totalVotosValidos, lista, ranking_preferencial,
-                    pasa_umbral_partido, escanos_partido, electo_proyectado
+    electo_proyectado se recalcula desde cargar_umbral_escanos() (doble valla JNE).
     """
     df = pd.read_excel(ONPE_FILE, sheet_name="07_CAND_SENADO_NAC")
     df["dni_candidato"] = df["dniCandidato"].astype(str).str.split(".").str[0].str.zfill(8)
-
-    # Recalcular pasa_umbral_partido desde hoja 11 (más fiable)
     umbral = cargar_umbral_escanos()
-    sen_nac = umbral[
-        (umbral["camara"] == "Senado Nacional") &
-        (umbral["circunscripcion"] == "NACIONAL")
-    ][["partido", "pasa_umbral", "escanos"]].copy()
-
-    df = df.merge(
-        sen_nac.rename(columns={"partido": "nombreAgrupacionPolitica",
-                                 "pasa_umbral": "pasa_umbral_v2",
-                                 "escanos": "escanos_v2"}),
-        on="nombreAgrupacionPolitica", how="left"
-    )
-    df["pasa_umbral_partido"] = df["pasa_umbral_v2"].fillna(False)
-    df["escanos_partido"]     = df["escanos_v2"].fillna(0).astype(int)
-    df = df.drop(columns=["pasa_umbral_v2", "escanos_v2"])
-
-    # Recalcular ranking y electo dentro de los 56 disponibles
-    df = df.sort_values(["nombreAgrupacionPolitica", "totalVotosValidos"],
-                        ascending=[True, False])
-    df["ranking_preferencial"] = df.groupby("nombreAgrupacionPolitica").cumcount() + 1
-    df["electo_proyectado"] = (
-        df["pasa_umbral_partido"] &
-        (df["ranking_preferencial"] <= df["escanos_partido"])
-    )
-    df["datos_completos"] = df["ranking_preferencial"] <= df["escanos_partido"]
+    df = _recalcular_electos(df, umbral, "Senado Nacional", col_circuns=None)
     df = df.sort_values("totalVotosValidos", ascending=False).reset_index(drop=True)
     return df
 
@@ -550,15 +574,14 @@ def cargar_candidatos_senado_nac() -> pd.DataFrame:
 def cargar_candidatos_senado_reg() -> pd.DataFrame:
     """
     Hoja 08_CAND_SENADO_REG — candidatos individuales al senado regional.
-    Columnas clave: distrito_electoral, nombreCandidato, dniCandidato,
-                    nombreAgrupacionPolitica, totalVotosValidos,
-                    electo_proyectado, ranking_preferencial
+    electo_proyectado se recalcula desde cargar_umbral_escanos() (doble valla JNE).
     """
     df = pd.read_excel(ONPE_FILE, sheet_name="08_CAND_SENADO_REG")
     df["dni_candidato"] = df["dniCandidato"].astype(str).str.split(".").str[0].str.zfill(8)
+    umbral = cargar_umbral_escanos()
+    df = _recalcular_electos(df, umbral, "Senado Regional", col_circuns="distrito_electoral")
     df = df.sort_values(
-        ["distrito_electoral", "nombreAgrupacionPolitica", "totalVotosValidos"],
-        ascending=[True, True, False]
+        ["distrito_electoral", "totalVotosValidos"], ascending=[True, False]
     ).reset_index(drop=True)
     return df
 
@@ -567,15 +590,14 @@ def cargar_candidatos_senado_reg() -> pd.DataFrame:
 def cargar_candidatos_diputados() -> pd.DataFrame:
     """
     Hoja 09_CAND_DIPUTADOS — candidatos individuales a diputados.
-    Columnas clave: circunscripcion, nombreCandidato, dniCandidato,
-                    nombreAgrupacionPolitica, totalVotosValidos,
-                    electo_proyectado, ranking_preferencial
+    electo_proyectado se recalcula desde cargar_umbral_escanos() (doble valla JNE).
     """
     df = pd.read_excel(ONPE_FILE, sheet_name="09_CAND_DIPUTADOS")
     df["dni_candidato"] = df["dniCandidato"].astype(str).str.split(".").str[0].str.zfill(8)
+    umbral = cargar_umbral_escanos()
+    df = _recalcular_electos(df, umbral, "Diputados", col_circuns="circunscripcion")
     df = df.sort_values(
-        ["circunscripcion", "nombreAgrupacionPolitica", "totalVotosValidos"],
-        ascending=[True, True, False]
+        ["circunscripcion", "totalVotosValidos"], ascending=[True, False]
     ).reset_index(drop=True)
     return df
 
@@ -584,9 +606,12 @@ def cargar_candidatos_diputados() -> pd.DataFrame:
 def cargar_candidatos_parlamento() -> pd.DataFrame:
     """
     Hoja 10_CAND_PARLAMENTO — candidatos al Parlamento Andino.
+    electo_proyectado se recalcula desde cargar_umbral_escanos() (doble valla JNE).
     """
     df = pd.read_excel(ONPE_FILE, sheet_name="10_CAND_PARLAMENTO")
     df["dni_candidato"] = df["dniCandidato"].astype(str).str.split(".").str[0].str.zfill(8)
+    umbral = cargar_umbral_escanos()
+    df = _recalcular_electos(df, umbral, "Parlamento Andino", col_circuns=None)
     df = df.sort_values("totalVotosValidos", ascending=False).reset_index(drop=True)
     return df
 
