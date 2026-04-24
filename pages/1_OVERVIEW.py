@@ -450,7 +450,7 @@ st.markdown(
 # Separador editorial (oro + navy)
 st.markdown(
     f"""<div style="margin:32px 0 28px 0;display:flex;align-items:center;gap:12px;">
-          <div style="flex:1;height:1px;background:{COLOR_BORDER};"></div>
+          <div style="flex:1;height:1px;background:{"#C9A227"};"></div>
           <div style="width:6px;height:6px;background:{COLOR_TEXT_PRIMARY};
                       transform:rotate(45deg);"></div>
           <div style="flex:1;height:1px;background:{"#C9A227"};"></div>
@@ -713,7 +713,7 @@ for fila_inicio in range(0, len(LEYES_DESTACADAS), cols_por_fila):
                                 font-style:italic;">
                         {n} de {len(votos)} votaron a favor
                     </div>
-                    <div style="margin-top:10px;background:{COLOR_BORDER_SOFT};
+                    <div style="margin-top:10px;background:{"#E5E1D6"};
                                 border-radius:0;height:3px;overflow:hidden;">
                         <div style="background:{color};width:{pct}%;
                                     height:3px;"></div>
