@@ -124,7 +124,7 @@ with kpi_main:
                     border-top:3px solid {COLOR_PRIMARY};border-radius:2px;
                     padding:24px 28px 22px 28px;height:100%;">
             <div style="font-size:0.62rem;font-weight:700;letter-spacing:0.14em;
-                        text-transform:uppercase;color:{COLOR_GOLD};
+                        text-transform:uppercase;color:{COLOR_TEXT_PRIMARY};
                         margin-bottom:10px;">
                 Total · Candidatos inscritos
             </div>
@@ -133,7 +133,7 @@ with kpi_main:
                         letter-spacing:-0.03em;line-height:0.95;">
                 {kpis['total_candidatos']:,}
             </div>
-            <div style="width:42px;height:2px;background:{COLOR_GOLD};
+            <div style="width:42px;height:2px;background:{COLOR_TEXT_PRIMARY};
                         margin:14px 0 10px 0;"></div>
             <div style="font-size:0.88rem;color:{COLOR_TEXT_SECONDARY};
                         line-height:1.5;max-width:380px;">
@@ -205,7 +205,7 @@ def section_header(eyebrow, title, sub):
     return f"""
         <div style="margin-bottom:14px;">
             <div style="font-size:0.60rem;font-weight:700;letter-spacing:0.14em;
-                        text-transform:uppercase;color:{COLOR_GOLD};
+                        text-transform:uppercase;color:{COLOR_TEXT_PRIMARY};
                         margin-bottom:4px;">{eyebrow}</div>
             <div style="font-family:{FONT_SERIF};font-size:1.4rem;font-weight:500;
                         color:{COLOR_TEXT_PRIMARY};letter-spacing:-0.01em;
@@ -449,7 +449,7 @@ with col_riesgo:
 st.markdown(
     f"""<div style="margin:32px 0 28px 0;display:flex;align-items:center;gap:12px;">
           <div style="flex:1;height:1px;background:{COLOR_BORDER};"></div>
-          <div style="width:6px;height:6px;background:{COLOR_GOLD};
+          <div style="width:6px;height:6px;background:{COLOR_TEXT_PRIMARY};
                       transform:rotate(45deg);"></div>
           <div style="flex:1;height:1px;background:{COLOR_BORDER};"></div>
        </div>""",
@@ -641,7 +641,7 @@ st.markdown(
     f"""
     <div style="margin-bottom:22px;">
         <div style="font-size:0.60rem;font-weight:700;letter-spacing:0.14em;
-                    text-transform:uppercase;color:{COLOR_GOLD};
+                    text-transform:uppercase;color:{COLOR_TEXT_PRIMARY};
                     margin-bottom:6px;">
             LEYES CLAVE · VOTOS A FAVOR
         </div>
