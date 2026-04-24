@@ -98,8 +98,7 @@ st.markdown(
       </h1>
       <div class="page-title-light" style="font-size:1.05rem;color:{COLOR_TEXT_SECONDARY};
            font-style:italic;">
-        {APP_SUBTITLE} · JNE · REINFO · Congreso del Perú
-      </div>
+         </div>
     </div>
     """,
     unsafe_allow_html=True,
