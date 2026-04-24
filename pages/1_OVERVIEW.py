@@ -341,7 +341,7 @@ with col_riesgo:
         ("alto",  "Riesgo alto",   COLOR_RIESGO_ALTO,  COLOR_RIESGO_ALTO_BG),
         ("medio", "Riesgo medio",  COLOR_RIESGO_MEDIO, COLOR_RIESGO_MEDIO_BG),
         ("bajo",  "Riesgo bajo",   COLOR_RIESGO_BAJO,  COLOR_RIESGO_BAJO_BG),
-        ("none",  "Sin dato",      COLOR_RIESGO_NONE,  COLOR_RIESGO_NONE_BG),
+        ("none",  "Sin dato",      COLOR_RIESGO_NONE,  "#F4F6F8"),
     ]
 
     for nivel, label, color, bg in niveles_display:
