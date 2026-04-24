@@ -399,8 +399,6 @@ with col_riesgo:
         .tail(8)
     )
     riesgo_partido["partido_label"] = riesgo_partido["partido"].str.upper()
-    # Color dinámico por partido desde config (v3.0)
-    riesgo_partido["color"] = riesgo_partido["partido"].apply(color_partido)
 
     max_chars = riesgo_partido["partido_label"].str.len().max()
     margen_izq = min(int(max_chars * 6.5), 280)
