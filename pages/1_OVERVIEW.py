@@ -89,7 +89,7 @@ st.markdown(
     <div class="page-title-wrap">
       <div class="page-eyebrow" style="font-size:0.62rem;font-weight:700;
            letter-spacing:0.18em;text-transform:uppercase;
-           color:{COLOR_GOLD};margin-bottom:8px;">
+           color:{COLOR_TEXT_SECONDARY};margin-bottom:8px;">
         OVERVIEW · PANORAMA GENERAL
       </div>
       <h1 class="page-title" style="font-size:2.4rem;margin:0 0 6px 0;
