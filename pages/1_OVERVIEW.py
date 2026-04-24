@@ -400,8 +400,10 @@ with col_riesgo:
     )
     riesgo_partido["partido_label"] = riesgo_partido["partido"].str.upper()
 
+  # Margen izquierdo dinámico: ~6.5px por carácter del nombre más largo
     max_chars = riesgo_partido["partido_label"].str.len().max()
     margen_izq = min(int(max_chars * 6.5), 280)
+
     altura_partidos = max(240, len(riesgo_partido) * 42 + 20)
 
     fig_partidos = go.Figure()
@@ -409,39 +411,41 @@ with col_riesgo:
         x=riesgo_partido["n"],
         y=riesgo_partido["partido_label"],
         orientation="h",
-        marker=dict(
-            color=riesgo_partido["color"].tolist(),
-            line=dict(width=0),
-        ),
+        marker_color=COLOR_RIESGO_ALTO,
         text=riesgo_partido["n"],
         textposition="outside",
-        textfont=dict(family=FONT_SERIF, size=13, color=COLOR_TEXT_PRIMARY),
+        textfont=dict(size=12, color=COLOR_TEXT_PRIMARY,
+                      family="'Plus Jakarta Sans', system-ui, sans-serif"),
         hovertemplate="<b>%{y}</b><br>%{x} congresistas riesgo alto<extra></extra>",
         cliponaxis=False,
     ))
-    try:
-        fig_partidos.update_traces(marker_cornerradius=BAR_CORNER_RADIUS)
-    except Exception:
-        pass
-
     fig_partidos.update_layout(
         height=altura_partidos,
         margin=dict(l=margen_izq, r=48, t=4, b=0),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
-        font=dict(family=FONT_SANS, size=11, color=COLOR_TEXT_PRIMARY),
+        font=dict(family="'Plus Jakarta Sans', system-ui, sans-serif",
+                  size=11, color=COLOR_TEXT_PRIMARY),
         xaxis=dict(
-            visible=False, showgrid=False, zeroline=False,
-            range=[0, riesgo_partido["n"].max() * 1.28],
+            visible=False,
+            showgrid=False,
+            zeroline=False,
+            range=[0, riesgo_partido["n"].max() * 1.25],
         ),
         yaxis=dict(
-            showgrid=False, zeroline=False,
-            tickfont=dict(family=FONT_SANS, size=10.5, color=COLOR_TEXT_SECONDARY),
+            showgrid=False,
+            zeroline=False,
+            tickfont=dict(size=10.5, color=COLOR_TEXT_SECONDARY),
             automargin=False,
         ),
     )
     st.plotly_chart(fig_partidos, use_container_width=True)
+
+st.markdown(
+    f'<div style="border-top:1px solid {COLOR_BORDER}; margin:24px 0;"></div>',
+    unsafe_allow_html=True,
+)
 
 # Separador editorial (oro + navy)
 st.markdown(
@@ -449,7 +453,7 @@ st.markdown(
           <div style="flex:1;height:1px;background:{COLOR_BORDER};"></div>
           <div style="width:6px;height:6px;background:{COLOR_TEXT_PRIMARY};
                       transform:rotate(45deg);"></div>
-          <div style="flex:1;height:1px;background:{COLOR_BORDER};"></div>
+          <div style="flex:1;height:1px;background:{"#C9A227"};"></div>
        </div>""",
     unsafe_allow_html=True,
 )
