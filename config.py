@@ -23,7 +23,7 @@
 # SECTION: Identidad del dashboard
 # -------------------------------------------------------
 APP_TITLE               = "Monitor Electoral Per\u00fa 2026"
-APP_SUBTITLE            = "Integridad electoral y riesgos institucionales \u00b7 Per\u00fa 2026"
+APP_SUBTITLE            = "Integridad electoral, riesgos institucionales y análisis de resultados \u00b7 Per\u00fa 2026"
 APP_ICON                = "\U0001f5f3\ufe0f"
 APP_LOGO                = None
 APP_CONFIDENTIAL_LABEL  = "CONFIDENCIAL \u2014 Uso interno"
@@ -110,8 +110,8 @@ LABEL_ABORDAJE = {
 # SECTION: Umbrales de score
 # Score total máximo: 38 (19 leyes x 2 pts) + bonus_autoria
 # -------------------------------------------------------
-SCORE_ALTO_MIN  = 20
-SCORE_MEDIO_MIN = 10
+SCORE_ALTO_MIN  = 22
+SCORE_MEDIO_MIN = 12
 
 # -------------------------------------------------------
 # SECTION: Etiquetas de UI
@@ -189,120 +189,6 @@ COLOR_BLOQUE = {
     "bicameralidad":  "#13315C",   # oklch(30% 0.12 258)   navy
     "genero":         "#8C1247",   # oklch(36% 0.17 358)   burgundy
 }
-
-# -------------------------------------------------------
-# SECTION: Paleta de PARTIDOS POLÍTICOS — v3.0
-#
-# Paleta EXPANDIDA con 14 hues distintos, separación ≥22°
-# en el círculo OKLCH. Los colores buscan evocar la identidad
-# del partido cuando es reconocible, pero priorizan la
-# DIFERENCIACIÓN visual en gráficos sobre la literalidad.
-#
-# Todos los colores tienen lightness 40-54% → igual peso
-# visual. Diseñados para ser distinguibles también en
-# blanco y negro y en daltonismo (deuteranopia).
-#
-# Cuando un partido no está en la lista, usar COLOR_PARTIDO_DEFAULT.
-# -------------------------------------------------------
-COLOR_PARTIDO = {
-    # Derecha / centro-derecha
-    "FUERZA POPULAR":                      "#D84315",   # naranja-rojo vibrante (fujimorismo)
-    "RENOVACION POPULAR":                  "#00695C",   # teal profundo
-    "AVANZA PAIS - PARTIDO DE INTEGRACION SOCIAL": "#5D4037",  # sepia
-    "AVANZA PAIS":                         "#5D4037",
-    "ALIANZA PARA EL PROGRESO":            "#1565C0",   # azul APP
-    "UNIDAD NACIONAL":                     "#1565C0",   # alias
-    "PARTIDO DEMOCRATICO SOMOS PERU":      "#EF6C00",   # naranja Somos Perú
-    "SOMOS PERU":                          "#EF6C00",
-    "PARTIDO POPULAR CRISTIANO - PPC":     "#388E3C",   # verde PPC
-    "PARTIDO MORADO":                      "#7B1FA2",   # morado
-    "PARTIDO APRISTA PERUANO":             "#C62828",   # rojo APRA
-
-    # Izquierda / progresistas
-    "JUNTOS POR EL PERU":                  "#AD1457",   # magenta profundo
-    "PERU LIBRE":                          "#B71C1C",   # rojo Perú Libre
-    "PARTIDO POLITICO NACIONAL PERU LIBRE": "#B71C1C",
-    "NUEVO PERU":                          "#6A1B9A",   # violeta
-
-    # Centro / emergentes
-    "PODEMOS PERU":                        "#F9A825",   # amarillo-dorado
-    "ACCION POPULAR":                      "#E65100",   # naranja AP
-    "PARTIDO CIVICO OBRAS":                "#4E342E",   # marrón oscuro
-    "FE EN EL PERU":                       "#00838F",   # cyan profundo
-    "UN CAMINO DIFERENTE":                 "#2E7D32",   # verde bosque
-    "PARTIDO POLITICO PERU PRIMERO":       "#283593",   # indigo
-    "PARTIDO DEL BUEN GOBIERNO":           "#00897B",   # teal
-    "PARTIDO SICREO":                      "#795548",   # café
-    "JUNTOS POR EL PERU - AGRUPACION POLITICA": "#AD1457",
-
-    # Frentes y alianzas
-    "FRENTE POPULAR AGRICOLA FIA DEL PERU": "#558B2F",   # verde oliva
-    "ALIANZA ELECTORAL VERDADERA DEMOCRACIA": "#00579B",  # azul oscuro
-
-    # Default para partidos no listados
-}
-COLOR_PARTIDO_DEFAULT = "#607D8B"   # blue-grey neutro
-
-# Grupos parlamentarios (bancadas actuales) — mismos tonos
-# cuando aplica, pero con pequeñas variaciones para evitar
-# colisión cuando partido y bancada son distintos
-COLOR_BANCADA = {
-    "FUERZA POPULAR":           "#D84315",
-    "ALIANZA PARA EL PROGRESO": "#1565C0",
-    "RENOVACIÓN POPULAR":       "#00695C",
-    "AVANZA PAÍS":              "#5D4037",
-    "SOMOS PERÚ":               "#EF6C00",
-    "PODEMOS PERÚ":             "#F9A825",
-    "PERÚ LIBRE":               "#B71C1C",
-    "JUNTOS POR EL PERÚ":       "#AD1457",
-    "ACCIÓN POPULAR":           "#E65100",
-    "HONOR Y DEMOCRACIA":       "#4527A0",   # violeta oscuro
-    "BLOQUE DEMOCRÁTICO POPULAR": "#37474F",  # gris-azulado
-    "BANCADA SOCIALISTA":       "#6A1B9A",   # violeta
-    "CAMBIO DEMOCRÁTICO":       "#00838F",
-    "NO AGRUPADO":              "#78909C",   # blue-grey claro
-}
-
-# Escala ordenada para asignación automática si hay más
-# partidos que colores definidos
-PALETTE_PARTIDOS_EXTRA = [
-    "#D84315",  # naranja-rojo
-    "#1565C0",  # azul
-    "#00695C",  # teal profundo
-    "#EF6C00",  # naranja
-    "#7B1FA2",  # morado
-    "#388E3C",  # verde
-    "#C62828",  # rojo
-    "#AD1457",  # magenta
-    "#F9A825",  # amarillo-dorado
-    "#283593",  # indigo
-    "#5D4037",  # sepia
-    "#00838F",  # cyan
-    "#558B2F",  # oliva
-    "#6A1B9A",  # violeta
-    "#4527A0",  # violeta oscuro
-    "#795548",  # café
-    "#00897B",  # teal medio
-    "#E65100",  # naranja oscuro
-    "#37474F",  # gris-azulado
-    "#2E7D32",  # verde bosque
-]
-
-
-def color_partido(nombre: str) -> str:
-    """Devuelve el color del partido, con fallback consistente.
-
-    Si el partido no está en COLOR_PARTIDO, hashea su nombre
-    contra PALETTE_PARTIDOS_EXTRA para asignar un color estable.
-    """
-    if not nombre:
-        return COLOR_PARTIDO_DEFAULT
-    key = str(nombre).strip().upper()
-    if key in COLOR_PARTIDO:
-        return COLOR_PARTIDO[key]
-    # hash estable → mismo partido siempre mismo color extra
-    idx = sum(ord(c) for c in key) % len(PALETTE_PARTIDOS_EXTRA)
-    return PALETTE_PARTIDOS_EXTRA[idx]
 
 
 # -------------------------------------------------------
@@ -944,3 +830,143 @@ hr {
 
 </style>
 """
+# -------------------------------------------------------
+# SECTION: Datos ONPE — resultados electorales 2026
+# -------------------------------------------------------
+from pathlib import Path
+ONPE_DATA_FILE = Path(__file__).parent / "data" / "onpe_resultados_latest.xlsx"
+
+# -------------------------------------------------------
+# SECTION: Paleta de PARTIDOS POLÍTICOS — v3.0
+#
+# Paleta EXPANDIDA con 14 hues distintos, separación ≥22°
+# en el círculo OKLCH. Los colores buscan evocar la identidad
+# del partido cuando es reconocible, pero priorizan la
+# DIFERENCIACIÓN visual en gráficos sobre la literalidad.
+#
+# Todos los colores tienen lightness 40-54% → igual peso
+# visual. Diseñados para ser distinguibles también en
+# blanco y negro y en daltonismo (deuteranopia).
+#
+# Cuando un partido no está en la lista, usar COLOR_PARTIDO_DEFAULT.
+# -------------------------------------------------------
+COLOR_PARTIDO = {
+    # Derecha / centro-derecha
+    "FUERZA POPULAR":                      "#D84315",   # naranja-rojo vibrante (fujimorismo)
+    "RENOVACION POPULAR":                  "#00695C",   # teal profundo
+    "AVANZA PAIS - PARTIDO DE INTEGRACION SOCIAL": "#5D4037",  # sepia
+    "AVANZA PAIS":                         "#5D4037",
+    "ALIANZA PARA EL PROGRESO":            "#1565C0",   # azul APP
+    "UNIDAD NACIONAL":                     "#1565C0",   # alias
+    "PARTIDO DEMOCRATICO SOMOS PERU":      "#EF6C00",   # naranja Somos Perú
+    "SOMOS PERU":                          "#EF6C00",
+    "PARTIDO POPULAR CRISTIANO - PPC":     "#388E3C",   # verde PPC
+    "PARTIDO MORADO":                      "#7B1FA2",   # morado
+    "PARTIDO APRISTA PERUANO":             "#C62828",   # rojo APRA
+
+    # Izquierda / progresistas
+    "JUNTOS POR EL PERU":                  "#AD1457",   # magenta profundo
+    "PERU LIBRE":                          "#B71C1C",   # rojo Perú Libre
+    "PARTIDO POLITICO NACIONAL PERU LIBRE": "#B71C1C",
+    "NUEVO PERU":                          "#6A1B9A",   # violeta
+
+    # Centro / emergentes
+    "PODEMOS PERU":                        "#F9A825",   # amarillo-dorado
+    "ACCION POPULAR":                      "#E65100",   # naranja AP
+    "PARTIDO CIVICO OBRAS":                "#4E342E",   # marrón oscuro
+    "FE EN EL PERU":                       "#00838F",   # cyan profundo
+    "UN CAMINO DIFERENTE":                 "#2E7D32",   # verde bosque
+    "PARTIDO POLITICO PERU PRIMERO":       "#283593",   # indigo
+    "PARTIDO DEL BUEN GOBIERNO":           "#00897B",   # teal
+    "PARTIDO SICREO":                      "#795548",   # café
+    "JUNTOS POR EL PERU - AGRUPACION POLITICA": "#AD1457",
+
+    # Frentes y alianzas
+    "FRENTE POPULAR AGRICOLA FIA DEL PERU": "#558B2F",   # verde oliva
+    "ALIANZA ELECTORAL VERDADERA DEMOCRACIA": "#00579B",  # azul oscuro
+
+    # Default para partidos no listados
+}
+COLOR_PARTIDO_DEFAULT = "#607D8B"   # blue-grey neutro
+
+# Grupos parlamentarios (bancadas actuales) — mismos tonos
+# cuando aplica, pero con pequeñas variaciones para evitar
+# colisión cuando partido y bancada son distintos
+COLOR_BANCADA = {
+    "FUERZA POPULAR":           "#D84315",
+    "ALIANZA PARA EL PROGRESO": "#1565C0",
+    "RENOVACIÓN POPULAR":       "#00695C",
+    "AVANZA PAÍS":              "#5D4037",
+    "SOMOS PERÚ":               "#EF6C00",
+    "PODEMOS PERÚ":             "#F9A825",
+    "PERÚ LIBRE":               "#B71C1C",
+    "JUNTOS POR EL PERÚ":       "#AD1457",
+    "ACCIÓN POPULAR":           "#E65100",
+    "HONOR Y DEMOCRACIA":       "#4527A0",   # violeta oscuro
+    "BLOQUE DEMOCRÁTICO POPULAR": "#37474F",  # gris-azulado
+    "BANCADA SOCIALISTA":       "#6A1B9A",   # violeta
+    "CAMBIO DEMOCRÁTICO":       "#00838F",
+    "NO AGRUPADO":              "#78909C",   # blue-grey claro
+}
+
+# Escala ordenada para asignación automática si hay más
+# partidos que colores definidos
+PALETTE_PARTIDOS_EXTRA = [
+    "#D84315",  # naranja-rojo
+    "#1565C0",  # azul
+    "#00695C",  # teal profundo
+    "#EF6C00",  # naranja
+    "#7B1FA2",  # morado
+    "#388E3C",  # verde
+    "#C62828",  # rojo
+    "#AD1457",  # magenta
+    "#F9A825",  # amarillo-dorado
+    "#283593",  # indigo
+    "#5D4037",  # sepia
+    "#00838F",  # cyan
+    "#558B2F",  # oliva
+    "#6A1B9A",  # violeta
+    "#4527A0",  # violeta oscuro
+    "#795548",  # café
+    "#00897B",  # teal medio
+    "#E65100",  # naranja oscuro
+    "#37474F",  # gris-azulado
+    "#2E7D32",  # verde bosque
+]
+
+
+def color_partido(nombre: str) -> str:
+    """Devuelve el color del partido, con fallback consistente.
+
+    Si el partido no está en COLOR_PARTIDO, hashea su nombre
+    contra PALETTE_PARTIDOS_EXTRA para asignar un color estable.
+    """
+    if not nombre:
+        return COLOR_PARTIDO_DEFAULT
+    key = str(nombre).strip().upper()
+    if key in COLOR_PARTIDO:
+        return COLOR_PARTIDO[key]
+    # hash estable → mismo partido siempre mismo color extra
+    idx = sum(ord(c) for c in key) % len(PALETTE_PARTIDOS_EXTRA)
+    return PALETTE_PARTIDOS_EXTRA[idx]
+
+
+# Nombres cortos para visualizaciones compactas (hemiciclo, leyendas)
+SIGLAS_PARTIDO = {
+    "FUERZA POPULAR":               "FP",
+    "JUNTOS POR EL PERÚ":           "JPP",
+    "RENOVACIÓN POPULAR":           "RP",
+    "PARTIDO DEL BUEN GOBIERNO":    "PBG",
+    "PARTIDO CÍVICO OBRAS":         "PCO",
+    "AHORA NACIÓN - AN":            "AN",
+    "ALIANZA PARA EL PROGRESO":     "APP",
+    "PARTIDO APRISTA PERUANO":      "APRA",
+    "PODEMOS PERÚ":                 "PP",
+    "PARTIDO PAÍS PARA TODOS":      "PPT",
+    "PARTIDO SICREO":               "SCR",
+    "PARTIDO DEMÓCRATA UNIDO PERÚ": "PDUP",
+    "PROGRESEMOS":                  "PRO",
+}
+
+# Códigos ONPE de filas especiales (no son partidos reales)
+ONPE_CODIGOS_ESPECIALES = {80, 81, 82}  # blancos, nulos, impugnados

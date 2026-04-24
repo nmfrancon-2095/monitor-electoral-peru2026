@@ -191,6 +191,11 @@ SECCIONES = [
         "pagina":    "analisis tematico",
     },
     {
+        "titulo":    "Análisis de Incidentes Electorales",
+        "desc":      "Patrones de violencia electoral y protestas, con identificación de presuntas víctimas.",
+        "pagina":    "incidentes",
+    },
+    {
         "titulo":    "Resultados 2026",
         "desc":      "Resultados electorales en tiempo real: presidencial, senado, diputados y parlamento andino.",
         "pagina":    "resultados 2026",
