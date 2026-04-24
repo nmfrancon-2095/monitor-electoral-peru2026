@@ -526,7 +526,8 @@ hr {
 # -------------------------------------------------------
 # SECTION: Datos ONPE — resultados electorales 2026
 # -------------------------------------------------------
-ONPE_DATA_FILE = "data/onpe_resultados_latest.xlsx"
+from pathlib import Path
+ONPE_DATA_FILE = Path(__file__).parent / "data" / "onpe_resultados_latest.xlsx"
 
 # Colores oficiales por partido (para hemiciclos y gráficos)
 # Basados en identidad visual de cada agrupación
