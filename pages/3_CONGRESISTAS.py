@@ -136,12 +136,13 @@ def _kpi_card(label, value, sub, bg, border, color):
     """Card KPI individual."""
     return (
         '<div style="background:' + bg + ';border:1px solid ' + border + ';'
-        'border-radius:8px;padding:18px;">'
+        'border-top:3px solid ' + color + ';border-radius:0;padding:18px;">'
         '<p style="font-size:0.65rem;font-weight:700;letter-spacing:0.10em;'
         'text-transform:uppercase;color:' + color + ';margin:0 0 8px 0;opacity:0.8;">'
         + label + '</p>'
-        '<p style="font-size:2.2rem;font-weight:700;color:' + color + ';'
-        'margin:0;line-height:1;font-variant-numeric:tabular-nums;">'
+        '<p style="font-family:\'Source Serif 4\',Georgia,serif;font-size:2.2rem;'
+        'font-weight:500;color:' + color + ';margin:0;line-height:1;'
+        'font-variant-numeric:tabular-nums;">'
         + str(value) + '</p>'
         '<p style="font-size:0.72rem;color:' + color + ';margin:6px 0 0 0;opacity:0.6;">'
         + sub + '</p>'
@@ -162,11 +163,12 @@ pct_medio = round(n_medio / n_total * 100) if n_total else 0
 pct_bajo  = round(n_bajo  / n_total * 100) if n_total else 0
 
 _card_total = (
-    '<div style="background:' + COLOR_PRIMARY + ';border-radius:8px;padding:18px 22px;'
+    '<div style="background:' + COLOR_PRIMARY + ';border-radius:0;padding:18px 22px;'
     'display:flex;flex-direction:column;justify-content:space-between;">'
     '<p style="font-size:0.65rem;font-weight:700;letter-spacing:0.12em;'
     'text-transform:uppercase;color:rgba(255,255,255,0.65);margin:0 0 8px 0;">Total</p>'
-    '<p style="font-size:2.6rem;font-weight:700;color:#FFFFFF;margin:0;line-height:1;'
+    '<p style="font-family:\'Source Serif 4\',Georgia,serif;font-size:2.6rem;'
+    'font-weight:500;color:#FFFFFF;margin:0;line-height:1;'
     'font-variant-numeric:tabular-nums;letter-spacing:-0.03em;">' + str(n_total) + '</p>'
     '<p style="font-size:0.72rem;color:rgba(255,255,255,0.55);margin:6px 0 0 0;">'
     'congresistas en 2026</p>'
@@ -373,19 +375,9 @@ if selected:
             # Badges de flags (REINFO / Autoría)
             badges_html = ""
             if datos.get("tiene_reinfo"):
-                badges_html += (
-                    '<span style="background:' + COLOR_REINFO_BG + ';color:' + COLOR_REINFO + ';'
-                    'border:1px solid ' + COLOR_REINFO + ';padding:3px 10px;border-radius:3px;'
-                    'font-size:0.72rem;font-weight:700;letter-spacing:0.06em;'
-                    'text-transform:uppercase;margin-right:6px;">V\u00ednculo REINFO</span>'
-                )
+                badges_html += '<span class="badge badge-reinfo">V\u00ednculo REINFO</span> '
             if pd.notna(datos.get("leyes_autoria")) and datos.get("leyes_autoria"):
-                badges_html += (
-                    '<span style="background:' + COLOR_RIESGO_ALTO_BG + ';color:' + COLOR_RIESGO_ALTO + ';'
-                    'border:1px solid ' + COLOR_RIESGO_ALTO + ';padding:3px 10px;border-radius:3px;'
-                    'font-size:0.72rem;font-weight:700;letter-spacing:0.06em;'
-                    'text-transform:uppercase;">Autor de ley(es) clave</span>'
-                )
+                badges_html += '<span class="badge badge-solid-alto">Autor de ley(es) clave</span>'
             badges_block = (
                 '<div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap;">'
                 + badges_html + '</div>'
@@ -393,7 +385,7 @@ if selected:
 
             _html_card = (
                 '<div style="background:' + COLOR_SURFACE + ';border:1px solid ' + COLOR_BORDER + ';'
-                'border-radius:8px;padding:20px 24px;">'
+                'border-top:2px solid ' + COLOR_PRIMARY + ';border-radius:0;padding:20px 24px;">'
                 # Fila 1: DNI · Expediente · Estado JNE
                 + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px 24px;">'
                 + _field("DNI", dni_val)
@@ -444,17 +436,16 @@ if selected:
 
             _html_score = (
                 '<div style="background:' + COLOR_SURFACE + ';border:1px solid ' + COLOR_BORDER + ';'
-                'border-top:3px solid ' + color_n + ';border-radius:8px;padding:20px 18px;">'
+                'border-top:3px solid ' + color_n + ';border-radius:0;padding:20px 18px;">'
                 '<p style="font-size:0.63rem;font-weight:700;letter-spacing:0.12em;'
                 'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';margin:0 0 6px 0;">'
                 'Score total</p>'
-                '<p style="font-size:3.2rem;font-weight:700;color:' + color_n + ';'
+                '<p style="font-family:\'Source Serif 4\',Georgia,serif;font-size:3.2rem;'
+                'font-weight:500;color:' + color_n + ';'
                 'line-height:1;margin:0 0 4px 0;font-variant-numeric:tabular-nums;'
                 'letter-spacing:-0.03em;">' + score_txt + '</p>'
-                '<span style="display:inline-block;background:' + bg_n + ';color:' + color_n + ';'
-                'border:1px solid ' + color_n + ';padding:2px 9px;border-radius:3px;'
-                'font-size:0.70rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;'
-                'margin-bottom:14px;">' + etiqueta + '</span>'
+                '<span class="badge badge-' + nivel + '" style="margin-bottom:14px;">'
+                + etiqueta + '</span>'
                 # Gauge bar de progreso
                 + '<div style="margin-bottom:16px;">'
                 '<div style="display:flex;justify-content:space-between;'

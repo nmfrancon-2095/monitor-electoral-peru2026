@@ -32,7 +32,7 @@ from config import (
     COLOR_RIESGO_BAJO, COLOR_RIESGO_BAJO_BG,
     COLOR_RIESGO_NONE, COLOR_RIESGO_NONE_BG,
     COLOR_REINFO, COLOR_REINFO_BG,
-    LABEL_RIESGO, LEYES_COLS, BLOQUES, GLOBAL_CSS
+    LABEL_RIESGO, LEYES_COLS, BLOQUES, COLOR_BLOQUE, GLOBAL_CSS
 )
 from data_loader import cargar_votaciones, cargar_leyes, cargar_candidatos
 
@@ -41,14 +41,8 @@ from data_loader import cargar_votaciones, cargar_leyes, cargar_candidatos
 # -------------------------------------------------------
 TRANSPARENT = "rgba(0,0,0,0)"
 
-COLORES_BLOQUE = {
-    "pro-crimen":     "#B83232",
-    "reinfo":         "#B85C0A",
-    "ambiental":      "#1E8A4A",
-    "espacio-civico": "#6B4FA0",
-    "bicameralidad":  "#2878B5",
-    "genero":         "#C2185B"
-}
+# Paleta de bloques viene de COLOR_BLOQUE en config.py
+COLORES_BLOQUE = COLOR_BLOQUE
 
 DESCRIPCION_BLOQUES = {
     "pro-crimen": (
@@ -154,9 +148,9 @@ st.markdown(
 # SECTION: Tres tabs
 # -------------------------------------------------------
 tab_leyes, tab_patrones, tab_riesgo = st.tabs([
-    "\U0001f4dc Leyes clave",
-    "\U0001f5f3\ufe0f Patrones de votación",
-    "\u26a0\ufe0f Patrones de riesgo",
+    "Leyes clave",
+    "Patrones de votaci\u00f3n",
+    "Patrones de riesgo",
 ])
 
 

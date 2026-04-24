@@ -123,12 +123,6 @@ LABEL_RIESGO = {
     "none":  "Sin dato",
 }
 
-DOT_RIESGO = {
-    "alto":  '<span style="color:#8E1B1B; font-size:0.7em;">\u25a0</span>',
-    "medio": '<span style="color:#9E5200; font-size:0.7em;">\u25a0</span>',
-    "bajo":  '<span style="color:#1B5E3A; font-size:0.7em;">\u25a0</span>',
-    "none":  '<span style="color:#4B5A6B; font-size:0.7em;">\u25a0</span>',
-}
 
 LABEL_VOTO = {
     "A FAVOR":    "A favor",
@@ -677,6 +671,9 @@ hr {
     text-transform: uppercase;
     margin-bottom: 6px;
 }
+.nota-info .nota-hd::before    { content: "\u25ae"; color: #13315C; margin-right: 8px; font-weight: 400; }
+.nota-warning .nota-hd::before { content: "\u25ae"; color: #9E5200; margin-right: 8px; font-weight: 400; }
+.nota-danger .nota-hd::before  { content: "\u25ae"; color: #8E1B1B; margin-right: 8px; font-weight: 400; }
 
 /* --- Section header --- */
 .section-header {

@@ -149,25 +149,26 @@ with kpi_main:
 def kpi_secundaria(label, valor, nota, color_rule=None):
     rule = color_rule or COLOR_PRIMARY
     val_color = color_rule or COLOR_TEXT_PRIMARY
-    return f"""
-        <div style="background:{COLOR_SURFACE};border:1px solid {COLOR_BORDER};
-                    border-top:3px solid {rule};border-radius:2px;
-                    padding:18px 18px 16px 18px;height:100%;">
-            <div style="font-size:0.58rem;font-weight:700;letter-spacing:0.12em;
-                        text-transform:uppercase;color:{COLOR_TEXT_MUTED};
-                        margin-bottom:8px;line-height:1.3;">
-                {label}
-            </div>
-            <div style="font-family:{FONT_SERIF};font-size:2.4rem;font-weight:500;
-                        color:{val_color};font-variant-numeric:tabular-nums;
-                        letter-spacing:-0.02em;line-height:1;">
-                {valor}
-            </div>
-            <div style="font-size:0.72rem;color:{COLOR_TEXT_SECONDARY};
-                        margin-top:6px;line-height:1.4;">
-                {nota}
-            </div>
-        </div>"""
+    return (
+        '<div style="background:' + COLOR_SURFACE + ';border:1px solid ' + COLOR_BORDER + ';'
+        'border-top:3px solid ' + rule + ';border-radius:2px;'
+        'padding:18px 18px 16px 18px;height:100%;">'
+        '<div style="font-size:0.58rem;font-weight:700;letter-spacing:0.12em;'
+        'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';'
+        'margin-bottom:8px;line-height:1.3;">'
+        + label +
+        '</div>'
+        '<div style="font-family:\'Source Serif 4\',Georgia,serif;font-size:2.4rem;'
+        'font-weight:500;color:' + val_color + ';font-variant-numeric:tabular-nums;'
+        'letter-spacing:-0.02em;line-height:1;">'
+        + str(valor) +
+        '</div>'
+        '<div style="font-size:0.72rem;color:' + COLOR_TEXT_SECONDARY + ';'
+        'margin-top:6px;line-height:1.4;">'
+        + nota +
+        '</div>'
+        '</div>'
+    )
 
 with k1:
     st.markdown(kpi_secundaria(
@@ -202,17 +203,17 @@ col_mapa, col_riesgo = st.columns([3, 2], gap="large")
 
 # ---- Helper: section header forensic ----
 def section_header(eyebrow, title, sub):
-    return f"""
-        <div style="margin-bottom:14px;">
-            <div style="font-size:0.60rem;font-weight:700;letter-spacing:0.14em;
-                        text-transform:uppercase;color:{COLOR_TEXT_PRIMARY};
-                        margin-bottom:4px;">{eyebrow}</div>
-            <div style="font-family:{FONT_SERIF};font-size:1.4rem;font-weight:500;
-                        color:{COLOR_TEXT_PRIMARY};letter-spacing:-0.01em;
-                        line-height:1.2;margin-bottom:4px;">{title}</div>
-            <div style="font-size:0.82rem;color:{COLOR_TEXT_SECONDARY};
-                        font-style:italic;line-height:1.45;">{sub}</div>
-        </div>"""
+    return (
+        '<div style="margin-bottom:14px;">'
+        '<div style="font-size:0.60rem;font-weight:700;letter-spacing:0.14em;'
+        'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';margin-bottom:4px;">'
+        + eyebrow + '</div>'
+        '<div class="section-header" style="margin-bottom:4px;">'
+        + title + '</div>'
+        '<div style="font-size:0.82rem;color:' + COLOR_TEXT_SECONDARY + ';'
+        'font-style:italic;line-height:1.45;">' + sub + '</div>'
+        '</div>'
+    )
 
 # --- Mapa de burbujas ---
 with col_mapa:
@@ -341,7 +342,7 @@ with col_riesgo:
         ("alto",  "Riesgo alto",   COLOR_RIESGO_ALTO,  COLOR_RIESGO_ALTO_BG),
         ("medio", "Riesgo medio",  COLOR_RIESGO_MEDIO, COLOR_RIESGO_MEDIO_BG),
         ("bajo",  "Riesgo bajo",   COLOR_RIESGO_BAJO,  COLOR_RIESGO_BAJO_BG),
-        ("none",  "Sin dato",      COLOR_RIESGO_NONE,  "#F4F6F8"),
+        ("none",  "Sin dato",      COLOR_RIESGO_NONE,  "#EEEFEC"),
     ]
 
     for nivel, label, color, bg in niveles_display:
@@ -415,7 +416,7 @@ with col_riesgo:
         text=riesgo_partido["n"],
         textposition="outside",
         textfont=dict(size=12, color=COLOR_TEXT_PRIMARY,
-                      family="'Plus Jakarta Sans', system-ui, sans-serif"),
+                      family="'DM Sans', system-ui, sans-serif"),
         hovertemplate="<b>%{y}</b><br>%{x} congresistas riesgo alto<extra></extra>",
         cliponaxis=False,
     ))
@@ -425,7 +426,7 @@ with col_riesgo:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
-        font=dict(family="'Plus Jakarta Sans', system-ui, sans-serif",
+        font=dict(family="'DM Sans', system-ui, sans-serif",
                   size=11, color=COLOR_TEXT_PRIMARY),
         xaxis=dict(
             visible=False,
@@ -521,7 +522,7 @@ with col_bloques:
             text=grupo["pct_label"],
             textposition="outside",
             textfont=dict(size=11, color=COLOR_TEXT_PRIMARY,
-                          family="'Plus Jakarta Sans', system-ui, sans-serif"),
+                          family="'DM Sans', system-ui, sans-serif"),
             customdata=grupo[["n_favor", "clave"]].values,
             hovertemplate=(
                 "<b>%{customdata[1]}</b> %{y}<br>"
@@ -536,7 +537,7 @@ with col_bloques:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         barmode="overlay",
-        font=dict(family="'Plus Jakarta Sans', system-ui, sans-serif",
+        font=dict(family="'DM Sans', system-ui, sans-serif",
                   size=11, color=COLOR_TEXT_PRIMARY),
         legend=dict(
             orientation="h",
@@ -594,7 +595,7 @@ with col_reinfo_viz:
         text=dptos["candidatos"],
         textposition="outside",
         textfont=dict(size=11, color=COLOR_TEXT_PRIMARY,
-                      family="'Plus Jakarta Sans', system-ui, sans-serif"),
+                      family="'DM Sans', system-ui, sans-serif"),
         hovertemplate="<b>%{y}</b><br>%{x} candidatos con REINFO<extra></extra>",
         cliponaxis=False,
     ))
@@ -604,7 +605,7 @@ with col_reinfo_viz:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
-        font=dict(family="'Plus Jakarta Sans', system-ui, sans-serif",
+        font=dict(family="'DM Sans', system-ui, sans-serif",
                   size=11, color=COLOR_TEXT_PRIMARY),
         xaxis=dict(
             visible=False,

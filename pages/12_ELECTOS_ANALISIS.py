@@ -88,7 +88,7 @@ def _sep():
 def _badge(texto, color, bg):
     return (
         '<span style="background:' + bg + ';color:' + color + ';'
-        'border:1px solid ' + color + ';padding:3px 10px;border-radius:3px;'
+        'border:1px solid ' + color + ';padding:3px 10px;border-radius:0;'
         'font-size:0.70rem;font-weight:700;letter-spacing:0.06em;'
         'text-transform:uppercase;margin-right:6px;">'
         + texto + '</span>'
@@ -99,11 +99,12 @@ def _kpi(label, valor, sub="", color=None):
     c = color or COLOR_PRIMARY
     return (
         '<div style="background:' + COLOR_SURFACE + ';border:1px solid ' + COLOR_BORDER + ';'
-        'border-radius:8px;padding:16px 20px;">'
+        'border-top:3px solid ' + c + ';border-radius:0;padding:16px 20px;">'
         '<div style="font-size:0.62rem;font-weight:700;letter-spacing:0.10em;'
         'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';margin-bottom:4px;">'
         + label + '</div>'
-        '<div style="font-size:1.55rem;font-weight:700;color:' + c + ';'
+        '<div style="font-family:\'Source Serif 4\',Georgia,serif;font-size:1.55rem;'
+        'font-weight:500;color:' + c + ';'
         'letter-spacing:-0.02em;font-variant-numeric:tabular-nums;">'
         + str(valor) + '</div>'
         + ('<div style="font-size:0.72rem;color:' + COLOR_TEXT_SECONDARY + ';margin-top:2px;">'
@@ -190,7 +191,7 @@ def _mostrar_perfil_electo(row, df_votos_full, df_reinfo_full, df_leyes_full,
         # Datos básicos
         st.markdown(
             '<div style="background:' + COLOR_SURFACE + ';border:1px solid ' + COLOR_BORDER + ';'
-            'border-radius:8px;padding:18px 22px;">'
+            'border-radius:0;padding:18px 22px;">'
             '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 20px;">'
             + _field("Partido", partido)
             + _field("C\u00e1mara", camara)
@@ -220,7 +221,7 @@ def _mostrar_perfil_electo(row, df_votos_full, df_reinfo_full, df_leyes_full,
         if badges:
             st.markdown(
                 '<div style="background:' + COLOR_SURFACE + ';border:1px solid ' + COLOR_BORDER + ';'
-                'border-radius:8px;padding:18px 16px;display:flex;flex-direction:column;gap:8px;">'
+                'border-radius:0;padding:18px 16px;display:flex;flex-direction:column;gap:8px;">'
                 + badges + '</div>',
                 unsafe_allow_html=True,
             )
@@ -303,7 +304,7 @@ def _mostrar_perfil_electo(row, df_votos_full, df_reinfo_full, df_leyes_full,
             st.markdown(
                 '<div style="overflow-x:auto;">'
                 '<table style="width:100%;border-collapse:collapse;background:' + COLOR_SURFACE + ';'
-                'border:1px solid ' + COLOR_BORDER + ';border-radius:8px;overflow:hidden;">'
+                'border:1px solid ' + COLOR_BORDER + ';border-radius:0;overflow:hidden;">'
                 '<thead><tr style="background:' + COLOR_SURFACE_ALT + ';border-bottom:2px solid ' + COLOR_BORDER + ';">'
                 '<th style="text-align:left;padding:8px 12px;font-size:0.68rem;font-weight:700;'
                 'letter-spacing:0.08em;text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';">Ley</th>'
@@ -338,7 +339,7 @@ def _mostrar_perfil_electo(row, df_votos_full, df_reinfo_full, df_leyes_full,
 
             st.markdown(
                 '<div style="background:' + COLOR_REINFO_BG + ';border:1px solid ' + COLOR_REINFO + ';'
-                'border-radius:8px;padding:16px 20px;">'
+                'border-radius:0;padding:16px 20px;">'
                 '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px 20px;">'
                 + _field_sm("N\u00ba derechos mineros", str(n_der))
                 + _field_sm("Departamentos", str(dptos))
@@ -837,11 +838,11 @@ with tab_alertas:
 
     if not df_triple.empty:
         st.markdown(
-            '<div style="background:#F3E8FD;border:1px solid #6C2FA0;border-radius:6px;'
-            'padding:10px 14px;margin-bottom:12px;">'
-            '<strong style="color:#6C2FA0;">Alerta máxima — triple criterio ('
+            '<div style="background:#F0EDF8;border:1px solid #4A2E7A;border-radius:0;'
+            'border-left:4px solid #4A2E7A;padding:10px 14px;margin-bottom:12px;">'
+            '<strong style="color:#4A2E7A;">Alerta m\u00e1xima \u2014 triple criterio ('
             + str(len(df_triple)) + ' candidatos):</strong> '
-            'reelectos con score legislativo alto Y vínculo REINFO.'
+            'reelectos con score legislativo alto Y v\u00ednculo REINFO.'
             '</div>',
             unsafe_allow_html=True,
         )
@@ -849,9 +850,9 @@ with tab_alertas:
             color_p = COLORES_PARTIDO.get(row["nombreAgrupacionPolitica"],
                                            COLORES_PARTIDO["_DEFAULT"])
             st.markdown(
-                '<div style="background:' + COLOR_SURFACE + ';border-left:4px solid #6C2FA0;'
-                'border:1px solid ' + COLOR_BORDER + ';border-left:4px solid #6C2FA0;'
-                'border-radius:6px;padding:12px 16px;margin-bottom:8px;">'
+                '<div style="background:' + COLOR_SURFACE + ';border-left:4px solid #4A2E7A;'
+                'border:1px solid ' + COLOR_BORDER + ';border-left:4px solid #4A2E7A;'
+                'border-radius:0;padding:12px 16px;margin-bottom:8px;">'
                 '<div style="display:flex;align-items:center;gap:10px;">'
                 '<div style="width:10px;height:10px;border-radius:50%;background:' + color_p + ';flex-shrink:0;"></div>'
                 '<strong style="font-size:0.90rem;color:' + COLOR_TEXT_PRIMARY + ';">'

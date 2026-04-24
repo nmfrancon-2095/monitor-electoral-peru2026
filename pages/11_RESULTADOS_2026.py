@@ -59,12 +59,13 @@ def fmt_pct(n, decimals=1) -> str:
 def _kpi(label: str, valor: str, sub: str = "") -> str:
     return (
         '<div style="background:' + COLOR_SURFACE + ';border:1px solid ' + COLOR_BORDER + ';'
-        'border-radius:8px;padding:16px 20px;">'
+        'border-top:3px solid ' + COLOR_PRIMARY + ';border-radius:0;padding:16px 20px;">'
         '<div style="font-size:0.62rem;font-weight:700;letter-spacing:0.10em;'
         'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';margin-bottom:4px;">'
         + label +
         '</div>'
-        '<div style="font-size:1.45rem;font-weight:700;color:' + COLOR_TEXT_PRIMARY + ';'
+        '<div style="font-family:\'Source Serif 4\',Georgia,serif;font-size:1.45rem;'
+        'font-weight:500;color:' + COLOR_TEXT_PRIMARY + ';'
         'letter-spacing:-0.02em;font-variant-numeric:tabular-nums;">'
         + valor +
         '</div>'
@@ -246,7 +247,7 @@ def tabla_candidatos_html(df: pd.DataFrame, col_circ: str = None,
     return (
         '<div style="overflow-x:auto;">'
         '<table style="width:100%;border-collapse:collapse;background:' + COLOR_SURFACE + ';'
-        'border:1px solid ' + COLOR_BORDER + ';border-radius:8px;overflow:hidden;">'
+        'border:1px solid ' + COLOR_BORDER + ';border-radius:0;overflow:hidden;">'
         '<thead><tr style="background:' + COLOR_SURFACE_ALT + ';border-bottom:2px solid ' + COLOR_BORDER + ';">'
         + circ_th +
         '<th style="text-align:left;padding:8px 10px;font-size:0.68rem;font-weight:700;'
