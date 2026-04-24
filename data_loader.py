@@ -124,6 +124,51 @@ def cargar_leyes() -> pd.DataFrame:
     df = pd.read_excel(DATA_FILE, sheet_name="05_LEYES")
     return df
 
+@st.cache_data
+def cargar_segunda_vuelta() -> pd.DataFrame:
+    """
+    Carga la hoja 06_SEGUNDA_VUELTA del Excel maestro.
+    Análisis comparativo Capa 2: Fujimori vs. Sánchez Palomino.
+
+    Columnas esperadas:
+        tema_num, tema_label, subtema,
+        analisis_fujimori, analisis_sanchez,
+        nivel_fujimori, nivel_sanchez
+
+    Normaliza niveles a mayúsculas para coincidir con
+    COLOR_ABORDAJE / LABEL_ABORDAJE de config.py.
+    Hace forward-fill de tema_num y tema_label (pueden estar
+    solo en la primera fila de cada bloque en el Excel).
+    """
+    df = pd.read_excel(DATA_FILE, sheet_name="06_SEGUNDA_VUELTA")
+
+    # Normalizar nombres de columnas
+    df.columns = df.columns.str.strip().str.lower()
+
+    # Eliminar filas completamente vacías
+    df = df.dropna(how="all").reset_index(drop=True)
+
+    # Normalizar niveles a mayúsculas
+    for col in ["nivel_fujimori", "nivel_sanchez"]:
+        if col in df.columns:
+            df[col] = (
+                df[col]
+                .astype(str)
+                .str.strip()
+                .str.upper()
+                .replace("NAN", "AUSENTE")
+            )
+
+    # tema_num como string para filtros
+    if "tema_num" in df.columns:
+        df["tema_num"] = df["tema_num"].astype(str).str.strip()
+
+    # Forward-fill: tema_num y tema_label solo en primera fila del bloque
+    for col in ["tema_num", "tema_label"]:
+        if col in df.columns:
+            df[col] = df[col].replace("NAN", pd.NA).ffill()
+
+    return df
 
 # --- Función de datos combinados ---
 
@@ -140,6 +185,7 @@ def cargar_todo() -> dict:
         "votaciones":   cargar_votaciones(),
         "reinfo":       cargar_reinfo(),
         "leyes":        cargar_leyes(),
+        "segunda_vuelta": cargar_segunda_vuelta(),
     }
 
 
