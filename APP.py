@@ -207,7 +207,7 @@ SECCIONES = [
     },
 ]
 
-cols = st.columns(3, gap="medium")
+cols = st.columns(6, gap="medium")
 for col, sec in zip(cols, SECCIONES):
     with col:
         st.markdown(
