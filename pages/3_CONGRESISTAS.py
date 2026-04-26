@@ -247,18 +247,16 @@ st.markdown(
 
 # -------------------------------------------------------
 # SECTION: Filtros — banda directa (sin expander)
+# El label va como st.markdown suelto antes de las columnas;
+# los widgets de Streamlit no pueden ir dentro de un div HTML.
 # -------------------------------------------------------
 st.markdown(
-    '<div style="background:' + COLOR_SURFACE + ';border:1px solid ' + COLOR_BORDER + ';'
-    'border-radius:0;padding:16px 20px;margin-bottom:16px;">'
     '<p style="font-size:0.60rem;font-weight:700;letter-spacing:0.14em;'
-    'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';margin:0 0 12px 0;">'
-    'Filtros</p>'
-    '</div>',
+    'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';margin:0 0 8px 0;">'
+    'Filtros</p>',
     unsafe_allow_html=True,
 )
 
-# Los controles van fuera del markdown (Streamlit widgets no van dentro de HTML)
 f1, f2, f3, f4 = st.columns([2, 2, 2, 2])
 
 with f1:
@@ -327,8 +325,54 @@ with col_dl:
 
 # -------------------------------------------------------
 # SECTION: Tabla principal AgGrid — v3
+# CSS inyectado via st.markdown (garantiza aplicación en v0.3.4)
 # Badge inline para nivel riesgo · sin fondos de fila
 # -------------------------------------------------------
+# Estilos AgGrid inyectados globalmente — más confiable que custom_css en v0.3.4
+_AGGRID_CSS = (
+    '<style>'
+    '.ag-root-wrapper {'
+    '  border: 1px solid #DAD6CC !important;'
+    '  border-radius: 0 !important;'
+    '}'
+    '.ag-header {'
+    '  background-color: #FFFFFF !important;'
+    '  border-bottom: 2px solid #0B2545 !important;'
+    '}'
+    '.ag-header-cell-label {'
+    '  font-size: 0.63rem !important;'
+    '  font-weight: 700 !important;'
+    '  letter-spacing: 0.12em !important;'
+    '  text-transform: uppercase !important;'
+    '  color: #7A7366 !important;'
+    '}'
+    '.ag-row {'
+    '  background-color: #FFFFFF !important;'
+    '  border-bottom: 1px solid #E5E1D6 !important;'
+    '}'
+    '.ag-row:hover, .ag-row-hover {'
+    '  background-color: #F7F5F0 !important;'
+    '}'
+    '.ag-row-selected, .ag-row-selected:hover {'
+    '  background-color: #EBF0F8 !important;'
+    '  border-left: 3px solid #0B2545 !important;'
+    '}'
+    '.ag-cell {'
+    '  font-size: 0.84rem !important;'
+    '  color: #0E1B26 !important;'
+    '  display: flex !important;'
+    '  align-items: center !important;'
+    '}'
+    '.ag-paging-panel {'
+    '  background-color: #FFFFFF !important;'
+    '  border-top: 1px solid #DAD6CC !important;'
+    '  font-size: 0.78rem !important;'
+    '  color: #7A7366 !important;'
+    '}'
+    '</style>'
+)
+st.markdown(_AGGRID_CSS, unsafe_allow_html=True)
+
 COLS_TABLA = [
     "nombre_display", "grupo_parlamentario", "partido",
     "cargo", "tipo_eleccion", "region",
@@ -431,43 +475,6 @@ gb.configure_column("tiene_reinfo",        header_name="REINFO",              ma
 gb.configure_selection(selection_mode="single", use_checkbox=False)
 gb.configure_grid_options(rowHeight=34, headerHeight=38)
 
-# Tema custom alineado con v3: papel cálido, navy, sin colores de fila
-custom_css = {
-    ".ag-root-wrapper": {
-        "border": "1px solid " + COLOR_BORDER + " !important",
-        "border-radius": "0 !important",
-    },
-    ".ag-header": {
-        "background-color": COLOR_SURFACE + " !important",
-        "border-bottom": "2px solid " + COLOR_PRIMARY + " !important",
-    },
-    ".ag-header-cell-label": {
-        "font-size": "0.65rem !important",
-        "font-weight": "700 !important",
-        "letter-spacing": "0.10em !important",
-        "text-transform": "uppercase !important",
-        "color": COLOR_TEXT_MUTED + " !important",
-    },
-    ".ag-row": {
-        "border-bottom": "1px solid " + COLOR_BORDER_SOFT + " !important",
-        "background-color": COLOR_SURFACE + " !important",
-    },
-    ".ag-row:hover": {
-        "background-color": COLOR_SURFACE_ALT + " !important",
-    },
-    ".ag-row-selected": {
-        "background-color": "#EAF0F8 !important",
-        "border-left": "3px solid " + COLOR_PRIMARY + " !important",
-    },
-    ".ag-cell": {
-        "font-size": "0.84rem !important",
-        "color": COLOR_TEXT_PRIMARY + " !important",
-        "font-family": FONT_SANS + " !important",
-        "display": "flex !important",
-        "align-items": "center !important",
-    },
-}
-
 grid_resp = AgGrid(
     df_tabla,
     gridOptions=gb.build(),
@@ -475,7 +482,6 @@ grid_resp = AgGrid(
     allow_unsafe_jscode=True,
     height=400,
     theme="alpine",
-    custom_css=custom_css,
 )
 
 # -------------------------------------------------------
