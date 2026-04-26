@@ -287,7 +287,7 @@ def _mostrar_perfil_electo(row, df_votos_full, df_reinfo_full, df_leyes_full,
                 # Nombre de la ley desde df_leyes si está disponible
                 nombre_ley = col_ley
                 if df_leyes_full is not None and not df_leyes_full.empty:
-                    match = df_leyes_full[df_leyes_full["codigo"] == col_ley]
+                    match = df_leyes_full[df_leyes_full["etiqueta"] == col_ley]
                     if not match.empty:
                         nombre_ley = str(match.iloc[0].get("nombre_corto", col_ley))
 
@@ -370,12 +370,8 @@ if df_electos.empty:
 # ── Métricas globales ─────────────────────────────────────────────────────────
 total_electos    = len(df_electos)
 total_reelectos  = int(df_electos["era_congresista_2021"].sum())
-total_reinfo     = int(df_electos["tiene_reinfo"].sum())
 total_riesgo_alto = int(
     df_electos[df_electos["nivel_riesgo"].isin(["alto", "muy_alto"])].shape[0]
-)
-reelectos_reinfo = int(
-    df_electos[df_electos["era_congresista_2021"] & df_electos["tiene_reinfo"]].shape[0]
 )
 
 # ── Header ────────────────────────────────────────────────────────────────────
@@ -409,7 +405,7 @@ st.markdown(
 )
 
 # ── KPIs ──────────────────────────────────────────────────────────────────────
-k1, k2, k3, k4, k5 = st.columns(5)
+k1, k2, k3 = st.columns(3)
 with k1:
     st.markdown(_kpi("Electos proyectados", total_electos, "todas las c\u00e1maras"), unsafe_allow_html=True)
 with k2:
@@ -417,26 +413,16 @@ with k2:
                      "eran congresistas 2021\u201326",
                      COLOR_RIESGO_MEDIO), unsafe_allow_html=True)
 with k3:
-    st.markdown(_kpi("Con v\u00ednculo REINFO", total_reinfo,
-                     "registro miner\u00eda informal",
-                     COLOR_REINFO), unsafe_allow_html=True)
-with k4:
     st.markdown(_kpi("Riesgo alto (reelectos)", total_riesgo_alto,
                      "score legislativo \u226520",
                      COLOR_RIESGO_ALTO), unsafe_allow_html=True)
-with k5:
-    st.markdown(_kpi("Reelecto + REINFO", reelectos_reinfo,
-                     "doble alerta",
-                     "#6C2FA0"), unsafe_allow_html=True)
 
 st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
-tab_todos, tab_reelectos, tab_reinfo, tab_alertas = st.tabs([
+tab_todos, tab_reelectos = st.tabs([
     "Todos los electos",
     "Reelectos \u00b7 historial legislativo",
-    "V\u00ednculos REINFO",
-    "Alertas combinadas",
 ])
 
 
@@ -455,7 +441,7 @@ with tab_todos:
         partidos = ["— Todos —"] + sorted(df_electos["nombreAgrupacionPolitica"].dropna().unique())
         partido_sel = st.selectbox("Partido", partidos, key="f_partido_todos")
     with fc3:
-        flags = ["— Todos —", "Reelectos", "Con REINFO", "Reelecto + REINFO"]
+        flags = ["— Todos —", "Reelectos"]
         flag_sel = st.selectbox("Filtro especial", flags, key="f_flag_todos")
     with fc4:
         st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
@@ -469,10 +455,7 @@ with tab_todos:
         df_filt = df_filt[df_filt["nombreAgrupacionPolitica"] == partido_sel]
     if flag_sel == "Reelectos":
         df_filt = df_filt[df_filt["era_congresista_2021"] == True]
-    elif flag_sel == "Con REINFO":
-        df_filt = df_filt[df_filt["tiene_reinfo"] == True]
-    elif flag_sel == "Reelecto + REINFO":
-        df_filt = df_filt[df_filt["era_congresista_2021"] & df_filt["tiene_reinfo"]]
+
 
     st.markdown(
         '<div style="font-size:0.78rem;color:' + COLOR_TEXT_SECONDARY + ';margin-bottom:8px;">'
@@ -664,238 +647,6 @@ with tab_reelectos:
             row_r = df_re_filt[df_re_filt["nombreCandidato"] == nombre_r]
             if not row_r.empty:
                 _mostrar_perfil_electo(row_r.iloc[0], df_votos, df_reinfo, df_leyes)
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TAB 3 — VÍNCULOS REINFO
-# ═══════════════════════════════════════════════════════════════════════════════
-with tab_reinfo:
-    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
-
-    df_con_reinfo = df_electos[df_electos["tiene_reinfo"] == True].copy()
-
-    if df_con_reinfo.empty:
-        st.success("Ningún electo proyectado tiene vínculo REINFO en la base de datos.")
-    else:
-        st.markdown(
-            '<div style="background:' + COLOR_REINFO_BG + ';border:1px solid ' + COLOR_REINFO + ';'
-            'border-radius:6px;padding:10px 14px;margin-bottom:16px;'
-            'font-size:0.82rem;color:' + COLOR_REINFO + ';">'
-            '<strong>' + str(len(df_con_reinfo)) + ' candidatos electos proyectados</strong> '
-            'tienen registro en REINFO (minería informal). '
-            + ('<strong>' + str(reelectos_reinfo) + ' son reelectos</strong> con historial legislativo disponible.'
-               if reelectos_reinfo else '') +
-            '</div>',
-            unsafe_allow_html=True,
-        )
-
-        fi1, fi2 = st.columns([3, 1])
-        with fi1:
-            partidos_i = ["— Todos —"] + sorted(df_con_reinfo["nombreAgrupacionPolitica"].dropna().unique())
-            partido_i_sel = st.selectbox("Partido", partidos_i, key="f_partido_reinfo")
-        with fi2:
-            st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
-            _csv_dl(df_con_reinfo, "Descargar", "electos_con_reinfo.csv", "dl_reinfo_tab")
-
-        df_i_filt = df_con_reinfo.copy()
-        if partido_i_sel != "— Todos —":
-            df_i_filt = df_i_filt[df_i_filt["nombreAgrupacionPolitica"] == partido_i_sel]
-
-        # Enriquecer con datos REINFO
-        df_reinfo_det = df_reinfo[["dni", "n_derechos_mineros", "dptos_mineros",
-                                    "es_region_prioritaria", "estado_reinfo_cons"]].copy()
-        df_reinfo_det["dni"] = df_reinfo_det["dni"].astype(str).str.zfill(8)
-        df_i_filt = df_i_filt.merge(df_reinfo_det,
-                                     left_on="dni_candidato", right_on="dni", how="left")
-
-        cols_i = ["nombreCandidato", "nombreAgrupacionPolitica", "camara",
-                  "circunscripcion", "era_congresista_2021",
-                  "n_derechos_mineros", "dptos_mineros", "es_region_prioritaria"]
-        df_i_tabla = df_i_filt[[c for c in cols_i if c in df_i_filt.columns]].copy()
-        df_i_tabla = df_i_tabla.rename(columns={
-            "nombreCandidato":          "Nombre",
-            "nombreAgrupacionPolitica": "Partido",
-            "camara":                   "C\u00e1mara",
-            "circunscripcion":          "Circunscripci\u00f3n",
-            "era_congresista_2021":     "Reelecto",
-            "n_derechos_mineros":       "N\u00ba derechos",
-            "dptos_mineros":            "Departamentos",
-            "es_region_prioritaria":    "Regi\u00f3n prioritaria",
-        })
-        df_i_tabla["Reelecto"] = df_i_tabla["Reelecto"].map({True: "Sí", False: "No"}) if "Reelecto" in df_i_tabla.columns else "—"
-        df_i_tabla["Regi\u00f3n prioritaria"] = df_i_tabla["Regi\u00f3n prioritaria"].map(
-            {True: "Sí", False: "No", 1: "Sí", 0: "No"}).fillna("—") if "Regi\u00f3n prioritaria" in df_i_tabla.columns else "—"
-
-        row_style_i = JsCode("""
-        function(params) {
-            var prior = params.data['Región prioritaria'];
-            var reelecto = params.data['Reelecto'];
-            if (prior === 'Sí' && reelecto === 'Sí') return {'background-color': '#F3E8FD'};
-            if (prior === 'Sí')    return {'background-color': '#FEF7EC'};
-            if (reelecto === 'Sí') return {'background-color': '#EAF4EC'};
-            return {};
-        }
-        """)
-
-        gb_i = GridOptionsBuilder.from_dataframe(df_i_tabla)
-        gb_i.configure_default_column(resizable=True, sortable=True, filter=True)
-        gb_i.configure_column("Nombre",              minWidth=220)
-        gb_i.configure_column("Partido",             minWidth=190)
-        gb_i.configure_column("C\u00e1mara",         minWidth=140)
-        gb_i.configure_column("Circunscripci\u00f3n", minWidth=160)
-        gb_i.configure_column("Reelecto",            maxWidth=95)
-        gb_i.configure_column("N\u00ba derechos",    maxWidth=110, type=["numericColumn"])
-        gb_i.configure_column("Departamentos",       minWidth=180)
-        gb_i.configure_column("Regi\u00f3n prioritaria", maxWidth=140)
-        gb_i.configure_selection(selection_mode="single", use_checkbox=False)
-        gb_i.configure_grid_options(rowStyle=row_style_i, rowHeight=32, headerHeight=36)
-
-        grid_i = AgGrid(
-            df_i_tabla,
-            gridOptions=gb_i.build(),
-            update_mode=GridUpdateMode.SELECTION_CHANGED,
-            allow_unsafe_jscode=True,
-            height=380,
-            theme="alpine",
-            key="grid_reinfo",
-        )
-
-        # Perfil al seleccionar
-        sel_i_raw = grid_i.get("selected_rows")
-        if sel_i_raw is None:
-            sel_i = []
-        elif hasattr(sel_i_raw, "empty"):
-            sel_i = [] if sel_i_raw.empty else sel_i_raw.to_dict("records")
-        else:
-            sel_i = list(sel_i_raw) if sel_i_raw else []
-
-        if sel_i:
-            nombre_i = sel_i[0].get("Nombre", "")
-            row_i = df_i_filt[df_i_filt["nombreCandidato"] == nombre_i]
-            if not row_i.empty:
-                _mostrar_perfil_electo(row_i.iloc[0], df_votos, df_reinfo, df_leyes)
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TAB 4 — ALERTAS COMBINADAS
-# ═══════════════════════════════════════════════════════════════════════════════
-with tab_alertas:
-    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
-
-    # Reelecto + REINFO
-    df_alerta_max = df_electos[
-        df_electos["era_congresista_2021"] & df_electos["tiene_reinfo"]
-    ].copy()
-
-    # Reelecto + score alto
-    df_alerta_score = df_electos[
-        df_electos["era_congresista_2021"] &
-        df_electos["nivel_riesgo"].isin(["alto"])
-    ].copy()
-
-    # Con REINFO + región prioritaria
-    df_reinfo_prior = df_reinfo[df_reinfo["es_region_prioritaria"] == True][["dni"]].copy()
-    df_reinfo_prior["dni"] = df_reinfo_prior["dni"].astype(str).str.zfill(8)
-    dni_prior = set(df_reinfo_prior["dni"])
-    df_alerta_region = df_electos[df_electos["dni_candidato"].isin(dni_prior)].copy()
-
-    st.markdown(
-        '<div style="font-size:0.68rem;font-weight:700;letter-spacing:0.10em;'
-        'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';margin-bottom:16px;">'
-        'Intersección de criterios de riesgo — candidatos que activan múltiples alertas'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-
-    al1, al2, al3 = st.columns(3)
-    with al1:
-        st.markdown(
-            _kpi("Reelecto + REINFO", len(df_alerta_max),
-                 "historial legislativo y minería", "#6C2FA0"),
-            unsafe_allow_html=True,
-        )
-    with al2:
-        st.markdown(
-            _kpi("Reelecto + riesgo alto", len(df_alerta_score),
-                 "score legislativo \u226520", COLOR_RIESGO_ALTO),
-            unsafe_allow_html=True,
-        )
-    with al3:
-        st.markdown(
-            _kpi("REINFO en región prioritaria", len(df_alerta_region),
-                 "Ucayali, Loreto, MdD, Puno", COLOR_REINFO),
-            unsafe_allow_html=True,
-        )
-
-    st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
-
-    # Alerta máxima: reelecto + REINFO + score alto
-    df_triple = df_electos[
-        df_electos["era_congresista_2021"] &
-        df_electos["tiene_reinfo"] &
-        df_electos["nivel_riesgo"].isin(["alto"])
-    ].copy()
-
-    if not df_triple.empty:
-        st.markdown(
-            '<div style="background:#F0EDF8;border:1px solid #4A2E7A;border-radius:0;'
-            'border-left:4px solid #4A2E7A;padding:10px 14px;margin-bottom:12px;">'
-            '<strong style="color:#4A2E7A;">Alerta m\u00e1xima \u2014 triple criterio ('
-            + str(len(df_triple)) + ' candidatos):</strong> '
-            'reelectos con score legislativo alto Y v\u00ednculo REINFO.'
-            '</div>',
-            unsafe_allow_html=True,
-        )
-        for _, row in df_triple.iterrows():
-            color_p = COLORES_PARTIDO.get(row["nombreAgrupacionPolitica"],
-                                           COLORES_PARTIDO["_DEFAULT"])
-            st.markdown(
-                '<div style="background:' + COLOR_SURFACE + ';border-left:4px solid #4A2E7A;'
-                'border:1px solid ' + COLOR_BORDER + ';border-left:4px solid #4A2E7A;'
-                'border-radius:0;padding:12px 16px;margin-bottom:8px;">'
-                '<div style="display:flex;align-items:center;gap:10px;">'
-                '<div style="width:10px;height:10px;border-radius:50%;background:' + color_p + ';flex-shrink:0;"></div>'
-                '<strong style="font-size:0.90rem;color:' + COLOR_TEXT_PRIMARY + ';">'
-                + str(row["nombreCandidato"]).title() + '</strong>'
-                '<span style="font-size:0.75rem;color:' + COLOR_TEXT_MUTED + ';">'
-                + str(row["nombreAgrupacionPolitica"]) + ' \u00b7 '
-                + str(row["camara"]) + ' \u00b7 '
-                + str(row.get("circunscripcion", "")) + '</span>'
-                '</div>'
-                '<div style="display:flex;gap:6px;margin-top:8px;">'
-                + _badge("Score " + str(int(row["score_total"])) if pd.notna(row.get("score_total")) else "Score —",
-                         COLOR_RIESGO_ALTO, COLOR_RIESGO_ALTO_BG)
-                + _badge("V\u00ednculo REINFO", COLOR_REINFO, COLOR_REINFO_BG)
-                + _badge("Reelecto 2021-26", COLOR_RIESGO_MEDIO, COLOR_RIESGO_MEDIO_BG)
-                + '</div>'
-                '</div>',
-                unsafe_allow_html=True,
-            )
-    else:
-        st.success("Ningún electo proyectado activa los tres criterios simultáneamente.")
-
-    st.markdown(
-        '<div style="border-top:1px solid ' + COLOR_BORDER + ';margin:20px 0 14px 0;"></div>',
-        unsafe_allow_html=True,
-    )
-
-    # Tabla completa de alertas combinadas (reelecto + REINFO)
-    if not df_alerta_max.empty:
-        st.markdown(
-            '<div style="font-size:0.68rem;font-weight:700;letter-spacing:0.10em;'
-            'text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';margin-bottom:10px;">'
-            'Detalle — Reelectos con vínculo REINFO</div>',
-            unsafe_allow_html=True,
-        )
-        col_dl_al, _ = st.columns([1, 4])
-        with col_dl_al:
-            _csv_dl(df_alerta_max, "Descargar", "alertas_reelecto_reinfo.csv", "dl_alertas")
-
-        for _, row in df_alerta_max.sort_values(
-            "score_total", ascending=False, na_position="last"
-        ).iterrows():
-            _mostrar_perfil_electo(row, df_votos, df_reinfo, df_leyes,
-                                    expandido=False)
 
 
 # ── Footer ────────────────────────────────────────────────────────────────────
