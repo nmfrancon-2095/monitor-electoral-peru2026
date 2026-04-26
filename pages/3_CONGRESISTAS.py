@@ -325,53 +325,9 @@ with col_dl:
 
 # -------------------------------------------------------
 # SECTION: Tabla principal AgGrid — v3
-# CSS inyectado via st.markdown (garantiza aplicación en v0.3.4)
-# Badge inline para nivel riesgo · sin fondos de fila
+# custom_css usa CSS variables del tema — mecanismo garantizado en v0.3.4
+# Badge inline via JsCode para riesgo, REINFO y score
 # -------------------------------------------------------
-# Estilos AgGrid inyectados globalmente — más confiable que custom_css en v0.3.4
-_AGGRID_CSS = (
-    '<style>'
-    '.ag-root-wrapper {'
-    '  border: 1px solid #DAD6CC !important;'
-    '  border-radius: 0 !important;'
-    '}'
-    '.ag-header {'
-    '  background-color: #FFFFFF !important;'
-    '  border-bottom: 2px solid #0B2545 !important;'
-    '}'
-    '.ag-header-cell-label {'
-    '  font-size: 0.63rem !important;'
-    '  font-weight: 700 !important;'
-    '  letter-spacing: 0.12em !important;'
-    '  text-transform: uppercase !important;'
-    '  color: #7A7366 !important;'
-    '}'
-    '.ag-row {'
-    '  background-color: #FFFFFF !important;'
-    '  border-bottom: 1px solid #E5E1D6 !important;'
-    '}'
-    '.ag-row:hover, .ag-row-hover {'
-    '  background-color: #F7F5F0 !important;'
-    '}'
-    '.ag-row-selected, .ag-row-selected:hover {'
-    '  background-color: #EBF0F8 !important;'
-    '  border-left: 3px solid #0B2545 !important;'
-    '}'
-    '.ag-cell {'
-    '  font-size: 0.84rem !important;'
-    '  color: #0E1B26 !important;'
-    '  display: flex !important;'
-    '  align-items: center !important;'
-    '}'
-    '.ag-paging-panel {'
-    '  background-color: #FFFFFF !important;'
-    '  border-top: 1px solid #DAD6CC !important;'
-    '  font-size: 0.78rem !important;'
-    '  color: #7A7366 !important;'
-    '}'
-    '</style>'
-)
-st.markdown(_AGGRID_CSS, unsafe_allow_html=True)
 
 COLS_TABLA = [
     "nombre_display", "grupo_parlamentario", "partido",
@@ -382,7 +338,56 @@ COLS_TABLA = [
 df_tabla = df_f[COLS_TABLA].copy()
 df_tabla["tiene_reinfo"] = df_tabla["tiene_reinfo"].map({True: "S\u00ed", False: "No"})
 
-# Badge de riesgo renderizado como HTML en la celda
+# ---- CSS via custom_css usando CSS variables del tema ----
+# El formato correcto para v0.3.4: selector -> {propiedad: valor}
+# Las CSS variables se inyectan en .ag-theme-streamlit y sobrescriben
+# los valores por defecto sin guerra de especificidad.
+AGGRID_CUSTOM_CSS = {
+    # Sobrescribir variables del tema
+    ".ag-theme-alpine, .ag-theme-streamlit": {
+        "--ag-background-color": "#FFFFFF",
+        "--ag-odd-row-background-color": "#FFFFFF",
+        "--ag-header-background-color": "#FFFFFF",
+        "--ag-border-color": "#DAD6CC",
+        "--ag-secondary-border-color": "#E5E1D6",
+        "--ag-foreground-color": "#0E1B26",
+        "--ag-secondary-foreground-color": "#45556A",
+        "--ag-row-hover-color": "#F7F5F0",
+        "--ag-selected-row-background-color": "#EBF0F8",
+        "--ag-font-family": "'DM Sans', system-ui, sans-serif",
+        "--ag-font-size": "13px",
+        "--ag-border-radius": "0px",
+        "--ag-alpine-active-color": "#0B2545",
+        "--ag-range-selection-border-color": "#0B2545",
+    },
+    # Header con borde inferior navy
+    ".ag-header": {
+        "border-bottom": "2px solid #0B2545 !important",
+    },
+    # Header cells — eyebrow style
+    ".ag-header-cell-text": {
+        "font-size": "0.62rem !important",
+        "font-weight": "700 !important",
+        "letter-spacing": "0.12em !important",
+        "text-transform": "uppercase !important",
+        "color": "#7A7366 !important",
+    },
+    # Separador de filas sutil
+    ".ag-row": {
+        "border-bottom": "1px solid #E5E1D6 !important",
+    },
+    # Fila seleccionada con borde izquierdo navy
+    ".ag-row-selected": {
+        "border-left": "3px solid #0B2545 !important",
+    },
+    # Contenedor sin border-radius
+    ".ag-root-wrapper": {
+        "border": "1px solid #DAD6CC !important",
+        "border-radius": "0 !important",
+    },
+}
+
+# ---- Cell renderers ----
 badge_renderer = JsCode("""
 class BadgeCellRenderer {
     init(params) {
@@ -398,48 +403,46 @@ class BadgeCellRenderer {
         this.eGui.innerHTML = params.value || '—';
         Object.assign(this.eGui.style, {
             display: 'inline-block',
-            padding: '2px 8px',
-            fontSize: '0.70rem',
+            padding: '2px 9px',
+            fontSize: '0.68rem',
             fontWeight: '700',
-            letterSpacing: '0.06em',
+            letterSpacing: '0.07em',
             textTransform: 'uppercase',
             background: c.bg,
             color: c.color,
             border: '1px solid ' + c.border,
             borderRadius: '0',
-            lineHeight: '1.6',
+            lineHeight: '1.7',
         });
     }
     getGui() { return this.eGui; }
 }
 """)
 
-# REINFO badge
 reinfo_renderer = JsCode("""
 class ReinfoCellRenderer {
     init(params) {
         this.eGui = document.createElement('span');
         const v = (params.value || '').toLowerCase();
-        if (v === 'sí' || v === 'si') {
+        if (v === 's\u00ed' || v === 'si') {
             this.eGui.innerHTML = 'S\u00ed';
             Object.assign(this.eGui.style, {
-                display:'inline-block', padding:'2px 8px',
-                fontSize:'0.70rem', fontWeight:'700',
-                letterSpacing:'0.06em', textTransform:'uppercase',
-                background:'#FAF0E4', color:'#8A3D00',
-                border:'1px solid #CDB090', borderRadius:'0',
+                display: 'inline-block', padding: '2px 8px',
+                fontSize: '0.68rem', fontWeight: '700',
+                letterSpacing: '0.07em', textTransform: 'uppercase',
+                background: '#FAF0E4', color: '#8A3D00',
+                border: '1px solid #CDB090', borderRadius: '0',
             });
         } else {
-            this.eGui.innerHTML = 'No';
-            this.eGui.style.color = '#7A7366';
-            this.eGui.style.fontSize = '0.80rem';
+            this.eGui.innerHTML = '—';
+            this.eGui.style.color = '#B8B2A3';
+            this.eGui.style.fontSize = '0.85rem';
         }
     }
     getGui() { return this.eGui; }
 }
 """)
 
-# Score renderer — serif tabular
 score_renderer = JsCode("""
 class ScoreCellRenderer {
     init(params) {
@@ -448,7 +451,7 @@ class ScoreCellRenderer {
         this.eGui.innerHTML = (v !== null && v !== undefined && v !== '') ? v : '\u2014';
         Object.assign(this.eGui.style, {
             fontFamily: "'Source Serif 4', Georgia, serif",
-            fontSize: '1rem',
+            fontSize: '1.05rem',
             fontWeight: '500',
             fontVariantNumeric: 'tabular-nums',
             color: '#0E1B26',
@@ -465,23 +468,30 @@ gb.configure_column("grupo_parlamentario", header_name="Grupo parlamentario", mi
 gb.configure_column("partido",             header_name="Partido",             minWidth=160)
 gb.configure_column("cargo",               header_name="Cargo actual",        minWidth=120)
 gb.configure_column("tipo_eleccion",       header_name="Postula a",           minWidth=160)
-gb.configure_column("region",              header_name="Regi\u00f3n",         minWidth=120)
-gb.configure_column("score_total",         header_name="Score",               maxWidth=85,
-                    cellRenderer=score_renderer)
-gb.configure_column("etiqueta_riesgo",     header_name="Riesgo",              minWidth=110,
-                    cellRenderer=badge_renderer)
-gb.configure_column("tiene_reinfo",        header_name="REINFO",              maxWidth=90,
-                    cellRenderer=reinfo_renderer)
+gb.configure_column("region",              header_name="Regi\u00f3n",        minWidth=120)
+gb.configure_column("score_total",
+    header_name="Score", maxWidth=85,
+    cellRenderer=score_renderer,
+)
+gb.configure_column("etiqueta_riesgo",
+    header_name="Riesgo", minWidth=120,
+    cellRenderer=badge_renderer,
+)
+gb.configure_column("tiene_reinfo",
+    header_name="REINFO", maxWidth=90,
+    cellRenderer=reinfo_renderer,
+)
 gb.configure_selection(selection_mode="single", use_checkbox=False)
-gb.configure_grid_options(rowHeight=34, headerHeight=38)
+gb.configure_grid_options(rowHeight=36, headerHeight=40)
 
 grid_resp = AgGrid(
     df_tabla,
     gridOptions=gb.build(),
     update_mode=GridUpdateMode.SELECTION_CHANGED,
     allow_unsafe_jscode=True,
-    height=400,
+    height=420,
     theme="alpine",
+    custom_css=AGGRID_CUSTOM_CSS,
 )
 
 # -------------------------------------------------------
