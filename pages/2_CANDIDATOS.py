@@ -212,6 +212,122 @@ df_filtrado["flags_tabla"] = df_filtrado.apply(_build_flags, axis=1)
 
 df_tabla = df_filtrado[COLS_TABLA].copy()
 
+# ---- CSS v3 Forensic Editorial inyectado via custom_css ----
+AGGRID_CUSTOM_CSS = {
+    ".ag-theme-alpine, .ag-theme-streamlit": {
+        "--ag-background-color": "#FFFFFF",
+        "--ag-odd-row-background-color": "#FFFFFF",
+        "--ag-header-background-color": "#F7F5F0",
+        "--ag-border-color": "#DAD6CC",
+        "--ag-secondary-border-color": "#E5E1D6",
+        "--ag-foreground-color": "#0E1B26",
+        "--ag-secondary-foreground-color": "#45556A",
+        "--ag-row-hover-color": "#F2F1EC",
+        "--ag-selected-row-background-color": "#EBF0F8",
+        "--ag-font-family": "'DM Sans', system-ui, sans-serif",
+        "--ag-font-size": "13px",
+        "--ag-border-radius": "0px",
+        "--ag-alpine-active-color": "#0B2545",
+        "--ag-range-selection-border-color": "#0B2545",
+    },
+    ".ag-header": {
+        "border-bottom": "2px solid #0B2545 !important",
+    },
+    ".ag-header-cell-text": {
+        "font-size": "0.62rem !important",
+        "font-weight": "700 !important",
+        "letter-spacing": "0.12em !important",
+        "text-transform": "uppercase !important",
+        "color": "#7A7366 !important",
+    },
+    ".ag-row": {
+        "border-bottom": "1px solid #E5E1D6 !important",
+    },
+    ".ag-row-selected": {
+        "border-left": "3px solid #0B2545 !important",
+    },
+    ".ag-root-wrapper": {
+        "border": "1px solid #DAD6CC !important",
+        "border-radius": "0 !important",
+    },
+}
+
+# ---- Cell renderers JsCode ----
+badge_riesgo_renderer = JsCode("""
+class BadgeRiesgo {
+    init(params) {
+        const nivel = (params.value || '').toLowerCase();
+        const map = {
+            'alto':     {bg:'#FBF1F1', color:'#8E1B1B', border:'#C9A0A0'},
+            'medio':    {bg:'#FBF4E8', color:'#9E5200', border:'#CDB890'},
+            'bajo':     {bg:'#EDF5EF', color:'#1B5E3A', border:'#90C4A0'},
+            'sin dato': {bg:'#EEEFEC', color:'#4B5A6B', border:'#B8C4CC'},
+        };
+        const c = map[nivel] || map['sin dato'];
+        this.eGui = document.createElement('span');
+        this.eGui.innerHTML = params.value || '\u2014';
+        Object.assign(this.eGui.style, {
+            display: 'inline-block',
+            padding: '2px 9px',
+            fontSize: '0.65rem',
+            fontWeight: '700',
+            letterSpacing: '0.09em',
+            textTransform: 'uppercase',
+            background: c.bg,
+            color: c.color,
+            border: '1px solid ' + c.border,
+            borderRadius: '0',
+            lineHeight: '1.8',
+        });
+    }
+    getGui() { return this.eGui; }
+}
+""")
+
+score_renderer = JsCode("""
+class ScoreRenderer {
+    init(params) {
+        this.eGui = document.createElement('span');
+        const v = params.value;
+        this.eGui.innerHTML = (v !== null && v !== undefined && v !== '') ? v : '\u2014';
+        Object.assign(this.eGui.style, {
+            fontFamily: "'Source Serif 4', Georgia, serif",
+            fontSize: '1.05rem',
+            fontWeight: '600',
+            fontVariantNumeric: 'tabular-nums',
+            color: '#0E1B26',
+        });
+    }
+    getGui() { return this.eGui; }
+}
+""")
+
+flags_renderer = JsCode("""
+class FlagsRenderer {
+    init(params) {
+        this.eGui = document.createElement('span');
+        const v = params.value || '\u2014';
+        if (v === '\u2014') {
+            this.eGui.innerHTML = '\u2014';
+            this.eGui.style.color = '#B8B2A3';
+        } else {
+            const parts = v.split(' \u00b7 ');
+            this.eGui.innerHTML = parts.map(p => {
+                let bg = '#EEEFEC', col = '#4B5A6B', brd = '#B8C4CC';
+                if (p === 'Congresista') { bg='#EBF0F8'; col='#0B2545'; brd='#9DB5CC'; }
+                if (p === 'REINFO')      { bg='#FAF0E4'; col='#8A3D00'; brd='#CDB090'; }
+                if (p === 'Presidencial'){ bg='#F3EFF9'; col='#4A2E7A'; brd='#B09CC4'; }
+                return '<span style="display:inline-block;padding:1px 7px;font-size:0.60rem;'
+                     + 'font-weight:700;letter-spacing:0.08em;text-transform:uppercase;'
+                     + 'background:' + bg + ';color:' + col + ';border:1px solid ' + brd + ';'
+                     + 'border-radius:0;margin-right:4px;line-height:1.8;">' + p + '</span>';
+            }).join('');
+        }
+    }
+    getGui() { return this.eGui; }
+}
+""")
+
 gb = GridOptionsBuilder.from_dataframe(df_tabla)
 gb.configure_default_column(
     resizable=True, sortable=True, filter=True,
@@ -221,29 +337,17 @@ gb.configure_column("nombre_completo", header_name="Nombre",        minWidth=230
 gb.configure_column("partido",         header_name="Partido",       minWidth=160, flex=2)
 gb.configure_column("cargo",           header_name="Cargo",         minWidth=140, flex=1)
 gb.configure_column("posicion",        header_name="Pos.",          maxWidth=65)
-gb.configure_column("region",          header_name="Región",        minWidth=120, flex=1)
-gb.configure_column("tipo_eleccion",   header_name="Tipo elección", minWidth=140, flex=1)
-gb.configure_column("estado_jne",      header_name="Estado JNE",    minWidth=110, flex=1)
-gb.configure_column("score_total",     header_name="Score",         maxWidth=75)
-gb.configure_column("etiqueta_riesgo", header_name="Riesgo",        minWidth=110, flex=1)
-gb.configure_column("flags_tabla",     header_name="Flags",         minWidth=170, flex=1)
+gb.configure_column("region",          header_name="Regi\u00f3n",  minWidth=120, flex=1)
+gb.configure_column("tipo_eleccion",   header_name="Tipo elecci\u00f3n", minWidth=140, flex=1)
+gb.configure_column("estado_jne",      header_name="Estado JNE",   minWidth=110, flex=1)
+gb.configure_column("score_total",     header_name="Score",         maxWidth=80,
+    cellRenderer=score_renderer)
+gb.configure_column("etiqueta_riesgo", header_name="Riesgo",        minWidth=110, flex=1,
+    cellRenderer=badge_riesgo_renderer)
+gb.configure_column("flags_tabla",     header_name="Flags",         minWidth=200, flex=1,
+    cellRenderer=flags_renderer)
 
-# Color de fila según nivel de riesgo — paleta v3 Forensic Editorial
-row_style_jscode = JsCode("""
-function(params) {
-    var r = params.data.etiqueta_riesgo;
-    if (r && r.includes('Alto'))  return {'background-color': '#FBF1F1'};
-    if (r && r.includes('Medio')) return {'background-color': '#FBF4E8'};
-    if (r && r.includes('Bajo'))  return {'background-color': '#EDF5EF'};
-    return {};
-}
-""")
-gb.configure_grid_options(
-    rowStyle=row_style_jscode,
-    rowHeight=32, headerHeight=36,
-    suppressMovableColumns=False, enableBrowserTooltips=True,
-)
-
+gb.configure_grid_options(rowHeight=36, headerHeight=40)
 gb.configure_selection(selection_mode="single", use_checkbox=False, pre_selected_rows=[])
 
 grid_response = AgGrid(
@@ -252,8 +356,9 @@ grid_response = AgGrid(
     update_mode=GridUpdateMode.SELECTION_CHANGED,
     allow_unsafe_jscode=True,
     fit_columns_on_grid_load=False,
-    height=400,
-    theme="balham",
+    height=420,
+    theme="alpine",
+    custom_css=AGGRID_CUSTOM_CSS,
 )
 
 # -------------------------------------------------------
