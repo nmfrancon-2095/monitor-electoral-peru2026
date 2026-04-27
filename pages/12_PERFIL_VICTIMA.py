@@ -373,7 +373,8 @@ with col_incidentes:
         # Tabla resumen de todos los incidentes de esta víctima
         cols_inc_tabla = [c for c in ["num_serie_victima", "num_serie_incidente",
                                        "fecha", "region", "tipo_ataque",
-                                       "autor_tipo", "estado_verificacion"]
+                                       "autor_tipo", "estado_verificacion",
+                                       "fuente_indirecta_1", "fuente_indirecta_2"]
                           if c in df_vic_sel.columns]
         df_inc_tabla = df_vic_sel[cols_inc_tabla].copy()
         if "fecha" in df_inc_tabla.columns:
@@ -389,6 +390,8 @@ with col_incidentes:
             "tipo_ataque":         "Tipo de ataque",
             "autor_tipo":          "Autor (tipo)",
             "estado_verificacion": "Verificaci\u00f3n",
+            "fuente_indirecta_1":  "Fuente Indirecta 1",
+            "fuente_indirecta_2":  "Fuente Indirecta 2",
         }
         st.dataframe(
             df_inc_tabla.rename(
