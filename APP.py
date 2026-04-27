@@ -175,9 +175,9 @@ with st.sidebar:
         ("4", "A Tener en Cuenta"),
         ("5", "An\u00e1lisis Tem\u00e1tico"),
         ("6", "Metodolog\u00eda"),
-        ("9", "Segunda Vuelta"),
-        ("10", "Resultados 2026"),
-        ("11", "Electos An\u00e1lisis"),
+        ("9", "Resultados 2026"),
+        ("10", "Electos Análisis"),
+        ("11", "Segunda Vuelta"),
     ]
 
     # Detectar página activa desde query params
@@ -231,7 +231,7 @@ with st.sidebar:
         st.markdown(nav_vio, unsafe_allow_html=True)
 
         # Botón de cerrar sesión del módulo violencia
-        if st.button("\ud83d\udd12 Bloquear m\u00f3dulo violencia",
+        if st.button("Bloquear m\u00f3dulo violencia",
                      use_container_width=True, key="lock_violencia"):
             st.session_state[_VIO_KEY] = False
             st.rerun()
@@ -242,7 +242,7 @@ with st.sidebar:
             '<div style="font-size:0.58rem;font-weight:700;letter-spacing:0.18em;'
             'text-transform:uppercase;color:rgba(255,255,255,0.40);'
             'margin-bottom:8px;padding-left:2px;">'
-            '\ud83d\udd12 M\u00f3dulo violencia electoral</div>'
+            '&#128274; M\u00f3dulo violencia electoral</div>'
             '<div style="font-size:0.72rem;color:rgba(255,255,255,0.45);'
             'margin-bottom:10px;line-height:1.4;padding-left:2px;">'
             'Incidentes \u00b7 V\u00edctimas \u00b7 Perfil V\u00edctima'
@@ -399,7 +399,7 @@ def _card_seccion(num, titulo, desc, color, locked=False):
     if locked:
         lock_html = (
             '<div style="position:absolute;top:14px;right:14px;'
-            'font-size:0.75rem;color:' + COLOR_TEXT_MUTED + ';">\ud83d\udd12</div>'
+            'font-size:0.75rem;color:' + COLOR_TEXT_MUTED + ';">&#128274;</div>'
         )
     opacity = "0.55" if locked else "1"
     return (
