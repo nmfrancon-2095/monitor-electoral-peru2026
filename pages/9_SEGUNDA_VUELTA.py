@@ -363,7 +363,7 @@ with col_chart:
 
     fig = go.Figure()
     fig.add_trace(go.Bar(
-        name="Fujimori",
+        name="Fujimori Higuchi",
         x=labels_display,
         y=vals_fuj,
         marker_color=[COLOR_ABORDAJE[n] for n in orden_niveles],
