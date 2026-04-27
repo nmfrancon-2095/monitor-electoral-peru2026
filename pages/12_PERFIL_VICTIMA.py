@@ -374,7 +374,7 @@ with col_incidentes:
         cols_inc_tabla = [c for c in ["num_serie_victima", "num_serie_incidente",
                                        "fecha", "region", "tipo_ataque",
                                        "autor_tipo", "estado_verificacion",
-                                       "fuente_indirecta_1", "fuente_indirecta_2"]
+                                       "fuente_indirecta_1", "fuente_indirecta_2", "descripcion"]
                           if c in df_vic_sel.columns]
         df_inc_tabla = df_vic_sel[cols_inc_tabla].copy()
         if "fecha" in df_inc_tabla.columns:
@@ -392,13 +392,34 @@ with col_incidentes:
             "estado_verificacion": "Verificaci\u00f3n",
             "fuente_indirecta_1":  "Fuente Indirecta 1",
             "fuente_indirecta_2":  "Fuente Indirecta 2",
+            "descripcion":         "Descripción",
         }
+
+        df_inc_tabla_renamed = df_inc_tabla.rename(
+            columns={c: label_map_inc.get(c, c) for c in df_inc_tabla.columns}
+        )
         st.dataframe(
-            df_inc_tabla.rename(
-                columns={c: label_map_inc.get(c, c) for c in df_inc_tabla.columns}
-            ),
+            df_inc_tabla_renamed,
             use_container_width=True,
-            height=min(120 + n_inc * 35, 280),
+            height=min(120 + n_inc * 35, 320),
+            column_config={
+                "Descripci\u00f3n": st.column_config.TextColumn(
+                    "Descripci\u00f3n",
+                    help="Texto completo visible al expandir la celda",
+                    max_chars=80,
+                    width="large",
+                ),
+                "Fuente Indirecta 1": st.column_config.TextColumn(
+                    "Fuente Indirecta 1",
+                    max_chars=60,
+                    width="medium",
+                ),
+                "Fuente Indirecta 2": st.column_config.TextColumn(
+                    "Fuente Indirecta 2",
+                    max_chars=60,
+                    width="medium",
+                ),
+            },
         )
 
         # Construir opciones para el selectbox de incidentes
