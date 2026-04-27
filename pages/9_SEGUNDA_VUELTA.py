@@ -54,8 +54,48 @@ if not st.session_state.get("autenticado", False):
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _foto_candidato(ruta: str, iniciales: str, color: str, size: int = 72) -> str:
+    """
+    Foto circular del candidato desde assets/.
+    Si la imagen no existe o falla, cae a círculo con iniciales.
+    ruta: ruta relativa desde la raíz del repo, ej: 'assets/keiko.jpg'
+    """
+    import os
+    s = str(size)
+    # Resolver ruta absoluta desde la raíz del repo
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    abs_path  = os.path.join(base_dir, ruta)
+    fs = str(round(size * 0.36))
+
+    if os.path.exists(abs_path):
+        # Leer imagen y convertir a base64 para embeber inline
+        import base64
+        ext = ruta.split(".")[-1].lower()
+        mime = "image/jpeg" if ext in ("jpg", "jpeg") else "image/png"
+        with open(abs_path, "rb") as f_img:
+            b64 = base64.b64encode(f_img.read()).decode()
+        return (
+            '<div style="width:' + s + 'px;height:' + s + 'px;border-radius:50%;'
+            'overflow:hidden;flex-shrink:0;border:2px solid ' + color + '44;">'
+            '<img src="data:' + mime + ';base64,' + b64 + '" '
+            'style="width:100%;height:100%;object-fit:cover;object-position:center top;" />'
+            '</div>'
+        )
+    else:
+        # Fallback: círculo con iniciales
+        return (
+            '<div style="width:' + s + 'px;height:' + s + 'px;border-radius:50%;'
+            'background:' + color + ';display:flex;align-items:center;'
+            'justify-content:center;flex-shrink:0;">'
+            '<span style="font-family:' + FONT_SERIF + ';font-size:' + fs + 'px;'
+            'font-weight:600;color:#FFFFFF;letter-spacing:-0.02em;">'
+            + iniciales + '</span>'
+            '</div>'
+        )
+
+
 def _avatar(iniciales: str, color: str, size: int = 72) -> str:
-    """Círculo con iniciales del candidato en color de partido."""
+    """Mantener por compatibilidad — usa círculo con iniciales."""
     s = str(size)
     fs = str(round(size * 0.36))
     return (
@@ -228,7 +268,7 @@ with col_hero_fuj:
         'border-top:4px solid ' + COLOR_FUJ + ';border-radius:0;padding:24px 28px;">'
         # Avatar + nombre
         '<div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">'
-        + _avatar("KF", COLOR_FUJ, 64) +
+        + _foto_candidato("assets/keiko.jpeg", "KF", COLOR_FUJ, 64) +
         '<div>'
         '<div style="font-family:' + FONT_SERIF + ';font-size:1.5rem;font-weight:500;'
         'color:' + COLOR_TEXT_PRIMARY + ';letter-spacing:-0.02em;line-height:1.1;">'
@@ -279,7 +319,7 @@ with col_hero_san:
         '<div style="background:' + COLOR_SURFACE + ';border:1px solid ' + COLOR_BORDER + ';'
         'border-top:4px solid ' + COLOR_SAN + ';border-radius:0;padding:24px 28px;">'
         '<div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">'
-        + _avatar("RS", COLOR_SAN, 64) +
+        + _foto_candidato("assets/roberto.jpeg", "RS", COLOR_SAN, 64) +
         '<div>'
         '<div style="font-family:' + FONT_SERIF + ';font-size:1.5rem;font-weight:500;'
         'color:' + COLOR_TEXT_PRIMARY + ';letter-spacing:-0.02em;line-height:1.1;">'
