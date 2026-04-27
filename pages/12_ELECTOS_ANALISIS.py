@@ -309,6 +309,8 @@ def _mostrar_perfil_electo(row, df_votos_full, df_reinfo_full, df_leyes_full,
                 '<th style="text-align:left;padding:8px 12px;font-size:0.68rem;font-weight:700;'
                 'letter-spacing:0.08em;text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';">Ley</th>'
                 '<th style="text-align:left;padding:8px 12px;font-size:0.68rem;font-weight:700;'
+                'letter-spacing:0.08em;text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';">Código</th>'
+                '<th style="text-align:left;padding:8px 12px;font-size:0.68rem;font-weight:700;'
                 'letter-spacing:0.08em;text-transform:uppercase;color:' + COLOR_TEXT_MUTED + ';">Voto</th>'
                 '</tr></thead>'
                 '<tbody>' + filas_ley + '</tbody>'
