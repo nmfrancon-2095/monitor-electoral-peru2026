@@ -1,6 +1,6 @@
 # ============================================================
 # 10_SEGUNDA_VUELTA.py — Monitor Electoral Perú 2026
-# Análisis comparativo: Keiko Fujimori Hugochi vs. Roberto Sánchez Palomino
+# Análisis comparativo: Keiko Fujimori Higuchi vs. Roberto Sánchez Palomino
 # Datos: hoja 06_SEGUNDA_VUELTA del Excel maestro
 #
 # Rediseño v3.0 "Forensic Editorial":
@@ -272,7 +272,7 @@ with col_hero_fuj:
         '<div>'
         '<div style="font-family:' + FONT_SERIF + ';font-size:1.5rem;font-weight:500;'
         'color:' + COLOR_TEXT_PRIMARY + ';letter-spacing:-0.02em;line-height:1.1;">'
-        'Keiko Fujimori Hugochi</div>'
+        'Keiko Fujimori Higuchi</div>'
         '<div style="font-size:0.80rem;color:' + COLOR_FUJ + ';font-weight:600;'
         'margin-top:3px;">Fuerza Popular</div>'
         '</div>'
@@ -614,7 +614,7 @@ for tema_key in temas_en_vista:
         col_fuj, col_san = st.columns(2, gap="small")
         with col_fuj:
             st.markdown(
-                _render_card("Keiko Fujimori Hugochi", "Fuerza Popular",
+                _render_card("Keiko Fujimori Higuchi", "Fuerza Popular",
                              txt_fuj, niv_fuj, COLOR_FUJ),
                 unsafe_allow_html=True,
             )
