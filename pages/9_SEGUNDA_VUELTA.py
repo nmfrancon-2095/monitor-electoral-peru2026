@@ -319,7 +319,7 @@ with col_hero_san:
         '<div style="background:' + COLOR_SURFACE + ';border:1px solid ' + COLOR_BORDER + ';'
         'border-top:4px solid ' + COLOR_SAN + ';border-radius:0;padding:24px 28px;">'
         '<div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">'
-        + _foto_candidato("assets/roberto.jpeg", "RS", COLOR_SAN, 64) +
+        + _foto_candidato("assets/roberto.jpg", "RS", COLOR_SAN, 64) +
         '<div>'
         '<div style="font-family:' + FONT_SERIF + ';font-size:1.5rem;font-weight:500;'
         'color:' + COLOR_TEXT_PRIMARY + ';letter-spacing:-0.02em;line-height:1.1;">'
