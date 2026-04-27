@@ -103,23 +103,14 @@ with st.spinner("Cargando candidatos..."):
 # SECTION: Header
 # -------------------------------------------------------
 st.markdown(
-    f"""
-    <div style="padding:4px 0 20px 0; border-bottom:2px solid {COLOR_BORDER};
-                margin-bottom:24px;">
-        <div style="font-size:0.63rem; font-weight:700; letter-spacing:0.12em;
-                    text-transform:uppercase; color:{COLOR_ACCENT}; margin-bottom:6px;">
-            Explorador
-        </div>
-        <h1 style="font-size:1.6rem; font-weight:700; color:{COLOR_TEXT_PRIMARY};
-                   margin:0 0 4px 0; letter-spacing:-0.02em; line-height:1.2;">
-            Candidatos
-        </h1>
-        <p style="font-size:0.85rem; color:{COLOR_TEXT_SECONDARY}; margin:0;">
-            {len(df_full):,} candidatos inscritos · JNE · Elecciones 2026
-            · Haz clic en una fila para ver el perfil completo
-        </p>
-    </div>
-    """,
+    '<div class="page-title-wrap">'
+    + '<div class="page-eyebrow">Explorador</div>'
+    + '<h1 class="page-title">Candidatos</h1>'
+    + '<p style="font-size:0.85rem; color:' + COLOR_TEXT_SECONDARY + '; margin:6px 0 0 0;">'
+    + str(len(df_full)) + ' candidatos inscritos \u00b7 JNE \u00b7 Elecciones 2026'
+    + ' \u00b7 Haz clic en una fila para ver el perfil completo'
+    + '</p>'
+    + '</div>',
     unsafe_allow_html=True,
 )
 
@@ -237,13 +228,13 @@ gb.configure_column("score_total",     header_name="Score",         maxWidth=75)
 gb.configure_column("etiqueta_riesgo", header_name="Riesgo",        minWidth=110, flex=1)
 gb.configure_column("flags_tabla",     header_name="Flags",         minWidth=170, flex=1)
 
-# Color de fila según nivel de riesgo
+# Color de fila según nivel de riesgo — paleta v3 Forensic Editorial
 row_style_jscode = JsCode("""
 function(params) {
     var r = params.data.etiqueta_riesgo;
-    if (r && r.includes('Alto'))  return {'background-color': '#FDECEA'};
-    if (r && r.includes('Medio')) return {'background-color': '#FEF9E7'};
-    if (r && r.includes('Bajo'))  return {'background-color': '#EAF4EC'};
+    if (r && r.includes('Alto'))  return {'background-color': '#FBF1F1'};
+    if (r && r.includes('Medio')) return {'background-color': '#FBF4E8'};
+    if (r && r.includes('Bajo'))  return {'background-color': '#EDF5EF'};
     return {};
 }
 """)
@@ -262,7 +253,7 @@ grid_response = AgGrid(
     allow_unsafe_jscode=True,
     fit_columns_on_grid_load=False,
     height=400,
-    theme="alpine",
+    theme="balham",
 )
 
 # -------------------------------------------------------
@@ -287,7 +278,7 @@ if selected:
         datos = datos_rows.iloc[0]
 
         st.markdown(
-            f'<div style="border-top:2px solid {COLOR_BORDER}; margin:24px 0 20px 0;"></div>',
+            '<div style="border-top:3px solid ' + COLOR_PRIMARY + '; margin:28px 0 20px 0;"></div>',
             unsafe_allow_html=True,
         )
 
@@ -305,23 +296,17 @@ if selected:
         score_txt = f"{int(score)}" if pd.notna(score) else "—"
         etiqueta_r = datos.get("etiqueta_riesgo", "Sin dato")
 
-        # Nombre como protagonista
+        # Nombre como protagonista — patrón profile broadsheet v3
         st.markdown(
-            f"""
-            <div style="margin-bottom:20px;">
-                <div style="font-size:0.63rem; font-weight:700; letter-spacing:0.12em;
-                            text-transform:uppercase; color:{COLOR_ACCENT}; margin-bottom:6px;">
-                    Perfil del candidato
-                </div>
-                <h2 style="font-size:1.45rem; font-weight:700; color:{COLOR_TEXT_PRIMARY};
-                           margin:0 0 4px 0; letter-spacing:-0.02em; line-height:1.2;">
-                    {datos["nombre_completo"]}
-                </h2>
-                <p style="font-size:0.85rem; color:{COLOR_TEXT_SECONDARY}; margin:0;">
-                    {datos.get("partido","—")} · {datos.get("cargo","—")} · {datos.get("region","—")}
-                </p>
-            </div>
-            """,
+            '<div style="margin-bottom:20px;">'
+            + '<div class="page-eyebrow">Perfil del candidato</div>'
+            + '<h2 class="profile-name">' + str(datos["nombre_completo"]) + '</h2>'
+            + '<p class="profile-meta">'
+            + str(datos.get("partido", "\u2014")) + ' \u00b7 '
+            + str(datos.get("cargo", "\u2014")) + ' \u00b7 '
+            + str(datos.get("region", "\u2014"))
+            + '</p>'
+            + '</div>',
             unsafe_allow_html=True,
         )
 
@@ -349,20 +334,17 @@ if selected:
                     f'<td style="color:{COLOR_TEXT_PRIMARY}; padding-bottom:2px;">{valor}</td></tr>'
                 )
             st.markdown(
-                f"""
-                <div style="background:{COLOR_SURFACE}; border:1px solid {COLOR_BORDER};
-                            border-radius:8px; padding:20px 22px;">
-                    <div style="font-size:0.60rem; font-weight:700; letter-spacing:0.10em;
-                                text-transform:uppercase; color:{COLOR_TEXT_MUTED};
-                                margin-bottom:14px;">
-                        Datos de inscripción
-                    </div>
-                    <table style="width:100%; border-collapse:collapse;
-                                  font-size:0.84rem; line-height:1.85;">
-                        {filas_html}
-                    </table>
-                </div>
-                """,
+                '<div style="background:' + COLOR_SURFACE + '; border:1px solid ' + COLOR_BORDER + ';'
+                + 'border-top:2px solid ' + COLOR_PRIMARY + ';'
+                + 'border-radius:0; padding:20px 22px;">'
+                + '<div style="font-size:0.60rem; font-weight:700; letter-spacing:0.12em;'
+                + 'text-transform:uppercase; color:' + COLOR_TEXT_MUTED + ';'
+                + 'margin-bottom:14px;">Datos de inscripci\u00f3n</div>'
+                + '<table style="width:100%; border-collapse:collapse;'
+                + 'font-size:0.84rem; line-height:1.85;">'
+                + filas_html
+                + '</table>'
+                + '</div>',
                 unsafe_allow_html=True,
             )
 
@@ -381,79 +363,59 @@ if selected:
             s_bonus           = _safe_int(datos.get("bonus_autoria"))
 
             st.markdown(
-                f"""
-                <div style="background:{bg_riesgo}; border:1px solid {color_riesgo}44;
-                            border-top:3px solid {color_riesgo};
-                            border-radius:0 0 8px 8px; padding:20px 22px 18px 22px;">
-                    <div style="font-size:0.60rem; font-weight:700; letter-spacing:0.10em;
-                                text-transform:uppercase; color:{COLOR_TEXT_MUTED};
-                                margin-bottom:10px;">
-                        Score de riesgo
-                    </div>
-                    <div style="font-size:3.5rem; font-weight:700; color:{color_riesgo};
-                                font-variant-numeric:tabular-nums; letter-spacing:-0.03em;
-                                line-height:1; margin-bottom:8px;">
-                        {score_txt}
-                    </div>
-                    <div style="display:inline-block; background:{color_riesgo};
-                                color:white; font-size:0.67rem; font-weight:700;
-                                letter-spacing:0.08em; text-transform:uppercase;
-                                padding:3px 10px; border-radius:3px; margin-bottom:16px;">
-                        Riesgo {etiqueta_r}
-                    </div>
-                    <div style="border-top:1px solid {color_riesgo}33; padding-top:14px;
-                                display:flex; gap:0; justify-content:space-between;">
-                        <div style="text-align:center; flex:1;">
-                            <div style="font-size:1.3rem; font-weight:700;
-                                        color:{color_riesgo}; font-variant-numeric:tabular-nums;">
-                                {s_procrimen}
-                            </div>
-                            <div style="font-size:0.58rem; font-weight:600;
-                                        letter-spacing:0.06em; text-transform:uppercase;
-                                        color:{COLOR_TEXT_MUTED}; margin-top:2px;">
-                                Pro-crimen
-                            </div>
-                        </div>
-                        <div style="text-align:center; flex:1; border-left:1px solid {color_riesgo}22;">
-                            <div style="font-size:1.3rem; font-weight:700;
-                                        color:{color_riesgo}; font-variant-numeric:tabular-nums;">
-                                {s_reinfo + s_ambiental + s_espacio_civico + s_bicameralidad + s_genero}
-                            </div>
-                            <div style="font-size:0.58rem; font-weight:600;
-                                        letter-spacing:0.06em; text-transform:uppercase;
-                                        color:{COLOR_TEXT_MUTED}; margin-top:2px;">
-                                Otros bloques
-                            </div>
-                        </div>
-                        <div style="text-align:center; flex:1; border-left:1px solid {color_riesgo}22;">
-                            <div style="font-size:1.3rem; font-weight:700;
-                                        color:{color_riesgo}; font-variant-numeric:tabular-nums;">
-                                {s_bonus}
-                            </div>
-                            <div style="font-size:0.58rem; font-weight:600;
-                                        letter-spacing:0.06em; text-transform:uppercase;
-                                        color:{COLOR_TEXT_MUTED}; margin-top:2px;">
-                                Bonus
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                """,
+                '<div style="background:' + bg_riesgo + '; border:1px solid ' + color_riesgo + '44;'
+                + 'border-top:3px solid ' + color_riesgo + ';'
+                + 'border-radius:0; padding:20px 22px 18px 22px;">'
+                + '<div style="font-size:0.60rem; font-weight:700; letter-spacing:0.12em;'
+                + 'text-transform:uppercase; color:' + COLOR_TEXT_MUTED + ';'
+                + 'margin-bottom:10px;">Score de riesgo</div>'
+                + '<div class="score-number" style="color:' + color_riesgo + '; margin-bottom:8px;">'
+                + score_txt + '</div>'
+                + '<div style="display:inline-block; background:' + color_riesgo + ';'
+                + 'color:white; font-size:0.62rem; font-weight:700;'
+                + 'letter-spacing:0.12em; text-transform:uppercase;'
+                + 'padding:3px 10px; border-radius:0; margin-bottom:16px;">'
+                + 'Riesgo ' + str(etiqueta_r) + '</div>'
+                + '<div style="border-top:1px solid ' + color_riesgo + '33; padding-top:14px;'
+                + 'display:flex; gap:0; justify-content:space-between;">'
+                + '<div style="text-align:center; flex:1;">'
+                + '<div style="font-size:1.3rem; font-weight:700;'
+                + 'color:' + color_riesgo + '; font-variant-numeric:tabular-nums;">'
+                + str(s_procrimen) + '</div>'
+                + '<div style="font-size:0.58rem; font-weight:600;'
+                + 'letter-spacing:0.06em; text-transform:uppercase;'
+                + 'color:' + COLOR_TEXT_MUTED + '; margin-top:2px;">Pro-crimen</div>'
+                + '</div>'
+                + '<div style="text-align:center; flex:1; border-left:1px solid ' + color_riesgo + '22;">'
+                + '<div style="font-size:1.3rem; font-weight:700;'
+                + 'color:' + color_riesgo + '; font-variant-numeric:tabular-nums;">'
+                + str(s_reinfo + s_ambiental + s_espacio_civico + s_bicameralidad + s_genero) + '</div>'
+                + '<div style="font-size:0.58rem; font-weight:600;'
+                + 'letter-spacing:0.06em; text-transform:uppercase;'
+                + 'color:' + COLOR_TEXT_MUTED + '; margin-top:2px;">Otros bloques</div>'
+                + '</div>'
+                + '<div style="text-align:center; flex:1; border-left:1px solid ' + color_riesgo + '22;">'
+                + '<div style="font-size:1.3rem; font-weight:700;'
+                + 'color:' + color_riesgo + '; font-variant-numeric:tabular-nums;">'
+                + str(s_bonus) + '</div>'
+                + '<div style="font-size:0.58rem; font-weight:600;'
+                + 'letter-spacing:0.06em; text-transform:uppercase;'
+                + 'color:' + COLOR_TEXT_MUTED + '; margin-top:2px;">Bonus</div>'
+                + '</div>'
+                + '</div>'
+                + '</div>',
                 unsafe_allow_html=True,
             )
 
         # --- Para tener en cuenta ---
         with col_flags:
             st.markdown(
-                f"""
-                <div style="background:{COLOR_SURFACE}; border:1px solid {COLOR_BORDER};
-                            border-radius:8px; padding:20px 22px; height:100%;">
-                    <div style="font-size:0.60rem; font-weight:700; letter-spacing:0.10em;
-                                text-transform:uppercase; color:{COLOR_TEXT_MUTED};
-                                margin-bottom:14px;">
-                        Para tener en cuenta
-                    </div>
-                """,
+                '<div style="background:' + COLOR_SURFACE + '; border:1px solid ' + COLOR_BORDER + ';'
+                + 'border-top:2px solid ' + COLOR_PRIMARY + ';'
+                + 'border-radius:0; padding:20px 22px; height:100%;">'
+                + '<div style="font-size:0.60rem; font-weight:700; letter-spacing:0.12em;'
+                + 'text-transform:uppercase; color:' + COLOR_TEXT_MUTED + ';'
+                + 'margin-bottom:14px;">Para tener en cuenta</div>',
                 unsafe_allow_html=True,
             )
 
@@ -503,21 +465,17 @@ if selected:
             else:
                 for titulo, desc, color, bg in flags_activos:
                     st.markdown(
-                        f"""
-                        <div style="background:{bg}; border-left:3px solid {color};
-                                    border-radius:0 6px 6px 0;
-                                    padding:10px 14px; margin-bottom:8px;">
-                            <div style="font-size:0.72rem; font-weight:700;
-                                        letter-spacing:0.05em; text-transform:uppercase;
-                                        color:{color}; margin-bottom:2px;">
-                                {titulo}
-                            </div>
-                            <div style="font-size:0.78rem; color:{COLOR_TEXT_SECONDARY};
-                                        line-height:1.4;">
-                                {desc}
-                            </div>
-                        </div>
-                        """,
+                        '<div style="background:' + bg + '; border-left:3px solid ' + color + ';'
+                        + 'border-radius:0;'
+                        + 'padding:10px 14px; margin-bottom:8px;">'
+                        + '<div style="font-size:0.68rem; font-weight:700;'
+                        + 'letter-spacing:0.08em; text-transform:uppercase;'
+                        + 'color:' + color + '; margin-bottom:2px;">'
+                        + titulo + '</div>'
+                        + '<div style="font-size:0.78rem; color:' + COLOR_TEXT_SECONDARY + ';'
+                        + 'line-height:1.4;">'
+                        + desc + '</div>'
+                        + '</div>',
                         unsafe_allow_html=True,
                     )
 
@@ -525,18 +483,16 @@ if selected:
             url_jne = datos.get("url_jne", None)
             if pd.notna(url_jne) and str(url_jne).startswith("http"):
                 st.markdown(
-                    f"""
-                    <div style="margin-top:12px; padding-top:12px;
-                                border-top:1px solid {COLOR_BORDER};">
-                        <a href="{url_jne}" target="_blank"
-                           style="display:inline-flex; align-items:center; gap:6px;
-                                  font-size:0.78rem; font-weight:600;
-                                  color:{COLOR_PRIMARY}; text-decoration:none;">
-                            <span style="font-size:0.9em;">\U0001f517</span>
-                            Ver hoja de vida en JNE
-                        </a>
-                    </div>
-                    """,
+                    '<div style="margin-top:12px; padding-top:12px;'
+                    + 'border-top:1px solid ' + COLOR_BORDER + ';">'
+                    + '<a href="' + str(url_jne) + '" target="_blank"'
+                    + ' style="display:inline-flex; align-items:center; gap:6px;'
+                    + 'font-size:0.78rem; font-weight:600;'
+                    + 'color:' + COLOR_PRIMARY + '; text-decoration:none;">'
+                    + '<span style="font-size:0.9em;">\U0001f517</span>'
+                    + ' Ver hoja de vida en JNE'
+                    + '</a>'
+                    + '</div>',
                     unsafe_allow_html=True,
                 )
 
@@ -550,23 +506,13 @@ if selected:
 
         if not voto_row.empty:
             st.markdown(
-                f'<div style="border-top:1px solid {COLOR_BORDER}; margin:24px 0 16px 0;"></div>',
+                '<div style="border-top:1px solid ' + COLOR_BORDER + '; margin:24px 0 16px 0;"></div>',
                 unsafe_allow_html=True,
             )
             st.markdown(
-                f"""
-                <div style="font-size:0.75rem; font-weight:700; letter-spacing:0.08em;
-                            text-transform:uppercase; color:{COLOR_TEXT_MUTED};
-                            margin-bottom:4px;">
-                    Historial parlamentario
-                </div>
-                <div class="section-header" style="margin-bottom:4px;">
-                    Votaciones en leyes clave
-                </div>
-                <div class="section-subheader">
-                    16 leyes monitoreadas · bloque temático y fecha
-                </div>
-                """,
+                '<div class="page-eyebrow">Historial parlamentario</div>'
+                + '<div class="section-header">Votaciones en leyes clave</div>'
+                + '<div class="section-subheader">16 leyes monitoreadas \u00b7 bloque tem\u00e1tico y fecha</div>',
                 unsafe_allow_html=True,
             )
 
@@ -603,113 +549,75 @@ if selected:
                 height=340,
             )
 
-            # Desglose de score — mini KPIs en fila
             gp = datos.get("grupo_parl", "—")
             st.markdown(
-                f"""
-                <div style="background:{COLOR_SURFACE}; border:1px solid {COLOR_BORDER};
-                            border-radius:8px; padding:14px 20px; margin-top:8px;
-                            display:flex; gap:24px; align-items:center; flex-wrap:wrap;">
-                    <div>
-                        <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
-                                    text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
-                            Grupo parlamentario
-                        </div>
-                        <div style="font-size:0.88rem; font-weight:600; color:{COLOR_TEXT_PRIMARY};
-                                    margin-top:2px;">
-                            {gp}
-                        </div>
-                    </div>
-                    <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
-                        <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
-                                    text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
-                            Score pro-crimen
-                        </div>
-                        <div style="font-size:0.88rem; font-weight:600;
-                                    color:{COLOR_RIESGO_ALTO}; margin-top:2px;
-                                    font-variant-numeric:tabular-nums;">
-                            {int(voto_data.get("score_procrimen", 0) or 0)}
-                        </div>
-                    </div>
-                    <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
-                        <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
-                                    text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
-                            Score REINFO
-                        </div>
-                        <div style="font-size:0.88rem; font-weight:600;
-                                    color:#B85C0A; margin-top:2px;
-                                    font-variant-numeric:tabular-nums;">
-                            {int(voto_data.get("score_reinfo", 0) or 0)}
-                        </div>
-                    </div>
-                    <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
-                        <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
-                                    text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
-                            Score ambiental
-                        </div>
-                        <div style="font-size:0.88rem; font-weight:600;
-                                    color:#1E8A4A; margin-top:2px;
-                                    font-variant-numeric:tabular-nums;">
-                            {int(voto_data.get("score_ambiental", 0) or 0)}
-                        </div>
-                    </div>
-                    <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
-                        <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
-                                    text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
-                            Score esp. c\u00edvico
-                        </div>
-                        <div style="font-size:0.88rem; font-weight:600;
-                                    color:#6B4FA0; margin-top:2px;
-                                    font-variant-numeric:tabular-nums;">
-                            {int(voto_data.get("score_espacio_civico", 0) or 0)}
-                        </div>
-                    </div>
-                    <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
-                        <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
-                                    text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
-                            Score bicameral.
-                        </div>
-                        <div style="font-size:0.88rem; font-weight:600;
-                                    color:#2878B5; margin-top:2px;
-                                    font-variant-numeric:tabular-nums;">
-                            {int(voto_data.get("score_bicameralidad", 0) or 0)}
-                        </div>
-                    </div>
-                    <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
-                        <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
-                                    text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
-                            Score g\u00e9nero
-                        </div>
-                        <div style="font-size:0.88rem; font-weight:600;
-                                    color:#C2185B; margin-top:2px;
-                                    font-variant-numeric:tabular-nums;">
-                            {int(voto_data.get("score_genero", 0) or 0)}
-                        </div>
-                    </div>
-                    <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
-                        <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
-                                    text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
-                            Bonus autor\u00eda
-                        </div>
-                        <div style="font-size:0.88rem; font-weight:600;
-                                    color:{COLOR_REINFO}; margin-top:2px;
-                                    font-variant-numeric:tabular-nums;">
-                            {int(voto_data.get("bonus_autoria", 0) or 0)}
-                        </div>
-                    </div>
-                    <div style="border-left:1px solid {COLOR_BORDER}; padding-left:24px;">
-                        <div style="font-size:0.58rem; font-weight:700; letter-spacing:0.08em;
-                                    text-transform:uppercase; color:{COLOR_TEXT_MUTED};">
-                            Score total
-                        </div>
-                        <div style="font-size:0.88rem; font-weight:700;
-                                    color:{color_riesgo}; margin-top:2px;
-                                    font-variant-numeric:tabular-nums;">
-                            {int(voto_data.get("score_total", 0) or 0)}
-                        </div>
-                    </div>
-                </div>
-                """,
+                '<div style="background:' + COLOR_SURFACE + '; border:1px solid ' + COLOR_BORDER + ';'
+                + 'border-top:2px solid ' + COLOR_BORDER_STRONG + ';'
+                + 'border-radius:0; padding:14px 20px; margin-top:8px;'
+                + 'display:flex; gap:24px; align-items:center; flex-wrap:wrap;">'
+                + '<div>'
+                + '<div style="font-size:0.58rem; font-weight:700; letter-spacing:0.10em;'
+                + 'text-transform:uppercase; color:' + COLOR_TEXT_MUTED + ';">Grupo parlamentario</div>'
+                + '<div style="font-size:0.88rem; font-weight:600; color:' + COLOR_TEXT_PRIMARY + ';'
+                + 'margin-top:2px;">' + str(gp) + '</div>'
+                + '</div>'
+                + '<div style="border-left:1px solid ' + COLOR_BORDER + '; padding-left:24px;">'
+                + '<div style="font-size:0.58rem; font-weight:700; letter-spacing:0.10em;'
+                + 'text-transform:uppercase; color:' + COLOR_TEXT_MUTED + ';">Score pro-crimen</div>'
+                + '<div style="font-size:0.88rem; font-weight:600;'
+                + 'color:' + COLOR_RIESGO_ALTO + '; margin-top:2px; font-variant-numeric:tabular-nums;">'
+                + str(int(voto_data.get("score_procrimen", 0) or 0)) + '</div>'
+                + '</div>'
+                + '<div style="border-left:1px solid ' + COLOR_BORDER + '; padding-left:24px;">'
+                + '<div style="font-size:0.58rem; font-weight:700; letter-spacing:0.10em;'
+                + 'text-transform:uppercase; color:' + COLOR_TEXT_MUTED + ';">Score REINFO</div>'
+                + '<div style="font-size:0.88rem; font-weight:600;'
+                + 'color:#8A3D00; margin-top:2px; font-variant-numeric:tabular-nums;">'
+                + str(int(voto_data.get("score_reinfo", 0) or 0)) + '</div>'
+                + '</div>'
+                + '<div style="border-left:1px solid ' + COLOR_BORDER + '; padding-left:24px;">'
+                + '<div style="font-size:0.58rem; font-weight:700; letter-spacing:0.10em;'
+                + 'text-transform:uppercase; color:' + COLOR_TEXT_MUTED + ';">Score ambiental</div>'
+                + '<div style="font-size:0.88rem; font-weight:600;'
+                + 'color:#1B5E3A; margin-top:2px; font-variant-numeric:tabular-nums;">'
+                + str(int(voto_data.get("score_ambiental", 0) or 0)) + '</div>'
+                + '</div>'
+                + '<div style="border-left:1px solid ' + COLOR_BORDER + '; padding-left:24px;">'
+                + '<div style="font-size:0.58rem; font-weight:700; letter-spacing:0.10em;'
+                + 'text-transform:uppercase; color:' + COLOR_TEXT_MUTED + ';">Score esp. c\u00edvico</div>'
+                + '<div style="font-size:0.88rem; font-weight:600;'
+                + 'color:#4A2E7A; margin-top:2px; font-variant-numeric:tabular-nums;">'
+                + str(int(voto_data.get("score_espacio_civico", 0) or 0)) + '</div>'
+                + '</div>'
+                + '<div style="border-left:1px solid ' + COLOR_BORDER + '; padding-left:24px;">'
+                + '<div style="font-size:0.58rem; font-weight:700; letter-spacing:0.10em;'
+                + 'text-transform:uppercase; color:' + COLOR_TEXT_MUTED + ';">Score bicameral.</div>'
+                + '<div style="font-size:0.88rem; font-weight:600;'
+                + 'color:#13315C; margin-top:2px; font-variant-numeric:tabular-nums;">'
+                + str(int(voto_data.get("score_bicameralidad", 0) or 0)) + '</div>'
+                + '</div>'
+                + '<div style="border-left:1px solid ' + COLOR_BORDER + '; padding-left:24px;">'
+                + '<div style="font-size:0.58rem; font-weight:700; letter-spacing:0.10em;'
+                + 'text-transform:uppercase; color:' + COLOR_TEXT_MUTED + ';">Score g\u00e9nero</div>'
+                + '<div style="font-size:0.88rem; font-weight:600;'
+                + 'color:#8C1247; margin-top:2px; font-variant-numeric:tabular-nums;">'
+                + str(int(voto_data.get("score_genero", 0) or 0)) + '</div>'
+                + '</div>'
+                + '<div style="border-left:1px solid ' + COLOR_BORDER + '; padding-left:24px;">'
+                + '<div style="font-size:0.58rem; font-weight:700; letter-spacing:0.10em;'
+                + 'text-transform:uppercase; color:' + COLOR_TEXT_MUTED + ';">Bonus autor\u00eda</div>'
+                + '<div style="font-size:0.88rem; font-weight:600;'
+                + 'color:' + COLOR_REINFO + '; margin-top:2px; font-variant-numeric:tabular-nums;">'
+                + str(int(voto_data.get("bonus_autoria", 0) or 0)) + '</div>'
+                + '</div>'
+                + '<div style="border-left:1px solid ' + COLOR_BORDER + '; padding-left:24px;">'
+                + '<div style="font-size:0.58rem; font-weight:700; letter-spacing:0.10em;'
+                + 'text-transform:uppercase; color:' + COLOR_TEXT_MUTED + ';">Score total</div>'
+                + '<div style="font-size:0.88rem; font-weight:700;'
+                + 'color:' + color_riesgo + '; margin-top:2px; font-variant-numeric:tabular-nums;">'
+                + str(int(voto_data.get("score_total", 0) or 0)) + '</div>'
+                + '</div>'
+                + '</div>',
                 unsafe_allow_html=True,
             )
 
@@ -717,11 +625,9 @@ if selected:
 # SECTION: Footer
 # -------------------------------------------------------
 st.markdown(
-    f"""
-    <div class="page-footer">
-        <span>{APP_CONFIDENTIAL_LABEL} · {APP_VERSION}</span>
-        <span>Fuentes: JNE · REINFO · Congreso del Perú</span>
-    </div>
-    """,
+    '<div class="page-footer">'
+    + '<span>' + APP_CONFIDENTIAL_LABEL + ' \u00b7 ' + APP_VERSION + '</span>'
+    + '<span>Fuentes: JNE \u00b7 REINFO \u00b7 Congreso del Per\u00fa</span>'
+    + '</div>',
     unsafe_allow_html=True,
 )
