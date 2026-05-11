@@ -264,12 +264,8 @@ with row1_l:
             color_discrete_sequence=[COLOR_PRIMARY],
             text="n",
         )
-        fig_tiempo.update_layout(
-            **_LAYOUT_TRANSP,
-            height=CHART_HEIGHT_SMALL,
-            xaxis_title=None, yaxis_title="Incidentes",
-            bargap=0.25,
-            margin=dict(t=8, b=40, l=0, r=40),
+        fig_tiempo.update_layout(**_LAYOUT_TRANSP)
+        fig_tiempo.update_layout(height=CHART_HEIGHT_SMALL, xaxis_title=None, yaxis_title="Incidentes", bargap=0.25, margin=dict(t=8, b=40, l=0, r=40),
         )
         _apply_bar_style(fig_tiempo, orientation="v")
         fig_tiempo.update_xaxes(showticklabels=True, tickangle=-45,
@@ -295,11 +291,8 @@ with row1_r:
             color_discrete_sequence=[COLOR_ACCENT],
             text="n",
         )
-        fig_sub.update_layout(
-            **_LAYOUT_TRANSP,
-            height=CHART_HEIGHT_SMALL,
-            xaxis_title="Incidentes", yaxis_title=None,
-            margin=dict(t=8, b=8, l=0, r=48),
+        fig_sub.update_layout(**_LAYOUT_TRANSP)
+        fig_sub.update_layout(height=CHART_HEIGHT_SMALL, xaxis_title="Incidentes", yaxis_title=None, margin=dict(t=8, b=8, l=0, r=48),
         )
         _apply_bar_style(fig_sub, orientation="h")
         st.plotly_chart(fig_sub, use_container_width=True)
@@ -327,9 +320,8 @@ with row2_l:
             color_discrete_sequence=[COLOR_PRIMARY],
             text="n",
         )
-        fig_tipos.update_layout(
-            **_LAYOUT_TRANSP,
-            height=max(300, len(df_tipos) * 26 + 60),
+        fig_tipos.update_layout(**_LAYOUT_TRANSP)
+        fig_tipos.update_layout(height=max(300, len(df_tipos) * 26 + 60),
             xaxis_title="Frecuencia", yaxis_title=None,
             margin=dict(t=8, b=8, l=0, r=48),
         )
@@ -353,11 +345,8 @@ with row2_r:
             color_discrete_sequence=[COLOR_ACCENT],
             text="n",
         )
-        fig_forma.update_layout(
-            **_LAYOUT_TRANSP,
-            height=CHART_HEIGHT_SMALL,
-            xaxis_title=None, yaxis_title="Frecuencia",
-            margin=dict(t=8, b=60, l=0, r=20),
+        fig_forma.update_layout(**_LAYOUT_TRANSP)
+        fig_forma.update_layout(height=CHART_HEIGHT_SMALL, xaxis_title=None, yaxis_title="Frecuencia", margin=dict(t=8, b=60, l=0, r=20),
         )
         _apply_bar_style(fig_forma, orientation="v")
         st.plotly_chart(fig_forma, use_container_width=True)
@@ -392,12 +381,8 @@ with row3_l:
             color_discrete_map=color_map,
             text="n",
         )
-        fig_autor.update_layout(
-            **_LAYOUT_TRANSP,
-            height=CHART_HEIGHT_SMALL,
-            showlegend=False,
-            xaxis_title="Incidentes", yaxis_title=None,
-            margin=dict(t=8, b=8, l=0, r=48),
+        fig_autor.update_layout(**_LAYOUT_TRANSP)
+        fig_autor.update_layout(height=CHART_HEIGHT_SMALL, showlegend=False, xaxis_title="Incidentes", yaxis_title=None, margin=dict(t=8, b=8, l=0, r=48),
         )
         _apply_bar_style(fig_autor, orientation="h")
         st.plotly_chart(fig_autor, use_container_width=True)
@@ -418,11 +403,8 @@ with row3_r:
             color_discrete_sequence=["#4A9BD4"],
             text="n",
         )
-        fig_reg.update_layout(
-            **_LAYOUT_TRANSP,
-            height=CHART_HEIGHT_SMALL,
-            xaxis_title="Incidentes", yaxis_title=None,
-            margin=dict(t=8, b=8, l=0, r=48),
+        fig_reg.update_layout(**_LAYOUT_TRANSP)
+        fig_reg.update_layout(height=CHART_HEIGHT_SMALL, xaxis_title="Incidentes", yaxis_title=None, margin=dict(t=8, b=8, l=0, r=48),
         )
         _apply_bar_style(fig_reg, orientation="h")
         st.plotly_chart(fig_reg, use_container_width=True)

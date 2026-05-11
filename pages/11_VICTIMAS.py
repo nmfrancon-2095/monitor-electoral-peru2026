@@ -212,9 +212,8 @@ with tab_perfil:
             df_tv.columns = ["tipo", "n"]
             fig_tv = px.bar(df_tv.sort_values("n"), x="n", y="tipo", orientation="h",
                             color_discrete_sequence=[COLOR_PRIMARY], text="n")
-            fig_tv.update_layout(**_LAYOUT_TRANSP, height=220,
-                                 xaxis_title="V\u00edctimas", yaxis_title=None,
-                                 showlegend=False, margin=dict(t=8,b=8,l=0,r=48))
+            fig_tv.update_layout(**_LAYOUT_TRANSP)
+            fig_tv.update_layout(height=220, xaxis_title="V\u00edctimas", yaxis_title=None, showlegend=False, margin=dict(t=8,b=8,l=0,r=48))
             _bar_style(fig_tv)
             st.plotly_chart(fig_tv, use_container_width=True)
 
@@ -231,8 +230,8 @@ with tab_perfil:
             df_fd.columns = ["factor", "n"]
             fig_fd = px.bar(df_fd.sort_values("n"), x="n", y="factor", orientation="h",
                             color_discrete_sequence=[COLOR_ACCENT], text="n")
-            fig_fd.update_layout(**_LAYOUT_TRANSP,
-                                 height=max(220, len(df_fd)*28+60),
+            fig_fd.update_layout(**_LAYOUT_TRANSP)
+            fig_fd.update_layout(height=max(220, len(df_fd)*28+60),
                                  xaxis_title="V\u00edctimas", yaxis_title=None,
                                  margin=dict(t=8,b=8,l=0,r=48))
             _bar_style(fig_fd)
@@ -253,9 +252,8 @@ with tab_perfil:
                 fig_cargo = px.bar(df_cargo.sort_values("n"), x="n", y="cargo",
                                    orientation="h",
                                    color_discrete_sequence=["#4A9BD4"], text="n")
-                fig_cargo.update_layout(**_LAYOUT_TRANSP, height=220,
-                                        xaxis_title="V\u00edctimas", yaxis_title=None,
-                                        margin=dict(t=8,b=8,l=0,r=48))
+                fig_cargo.update_layout(**_LAYOUT_TRANSP)
+                fig_cargo.update_layout(height=220, xaxis_title="V\u00edctimas", yaxis_title=None, margin=dict(t=8,b=8,l=0,r=48))
                 _bar_style(fig_cargo)
                 st.plotly_chart(fig_cargo, use_container_width=True)
             else:
@@ -275,8 +273,8 @@ with tab_perfil:
                 fig_part = px.bar(df_part.sort_values("n"), x="n", y="partido",
                                   orientation="h",
                                   color_discrete_sequence=["#6B4FA0"], text="n")
-                fig_part.update_layout(**_LAYOUT_TRANSP,
-                                       height=max(220, len(df_part)*28+60),
+                fig_part.update_layout(**_LAYOUT_TRANSP)
+                fig_part.update_layout(height=max(220, len(df_part)*28+60),
                                        xaxis_title="V\u00edctimas", yaxis_title=None,
                                        margin=dict(t=8,b=8,l=0,r=48))
                 _bar_style(fig_part)
@@ -294,8 +292,8 @@ with tab_perfil:
         df_obj.columns = ["objetivo", "n"]
         fig_obj = px.bar(df_obj.sort_values("n"), x="n", y="objetivo", orientation="h",
                          color_discrete_sequence=[COLOR_RIESGO_ALTO], text="n")
-        fig_obj.update_layout(**_LAYOUT_TRANSP,
-                              height=max(220, len(df_obj)*28+60),
+        fig_obj.update_layout(**_LAYOUT_TRANSP)
+        fig_obj.update_layout(height=max(220, len(df_obj)*28+60),
                               xaxis_title="V\u00edctimas", yaxis_title=None,
                               margin=dict(t=8,b=8,l=0,r=48))
         _bar_style(fig_obj)
@@ -326,10 +324,8 @@ with tab_intersec:
             fig_gen = px.bar(df_gen.sort_values("n"), x="n", y="genero",
                              orientation="h", color="genero",
                              color_discrete_map=color_gen, text="n")
-            fig_gen.update_layout(**_LAYOUT_TRANSP, height=220,
-                                  xaxis_title="V\u00edctimas", yaxis_title=None,
-                                  showlegend=True,
-                                  legend=dict(orientation="h", y=-0.2, x=0),
+            fig_gen.update_layout(**_LAYOUT_TRANSP)
+            fig_gen.update_layout(height=220, xaxis_title="V\u00edctimas", yaxis_title=None, showlegend=True, legend=dict(orientation="h", y=-0.2, x=0),
                                   margin=dict(t=8,b=40,l=0,r=48))
             _bar_style(fig_gen)
             st.plotly_chart(fig_gen, use_container_width=True)
@@ -347,9 +343,8 @@ with tab_intersec:
             fig_etnia = px.bar(df_etnia.sort_values("n"), x="n", y="etnia",
                                orientation="h",
                                color_discrete_sequence=["#1E8A4A"], text="n")
-            fig_etnia.update_layout(**_LAYOUT_TRANSP, height=260,
-                                    xaxis_title="V\u00edctimas", yaxis_title=None,
-                                    margin=dict(t=8,b=8,l=0,r=48))
+            fig_etnia.update_layout(**_LAYOUT_TRANSP)
+            fig_etnia.update_layout(height=260, xaxis_title="V\u00edctimas", yaxis_title=None, margin=dict(t=8,b=8,l=0,r=48))
             _bar_style(fig_etnia)
             st.plotly_chart(fig_etnia, use_container_width=True)
 
@@ -366,9 +361,8 @@ with tab_intersec:
             df_edad["edad"] = df_edad["edad"].fillna("Sin dato")
             fig_edad = px.bar(df_edad.sort_values("edad"), x="edad", y="n",
                               color_discrete_sequence=[COLOR_ACCENT], text="n")
-            fig_edad.update_layout(**_LAYOUT_TRANSP, height=240,
-                                   xaxis_title=None, yaxis_title="V\u00edctimas",
-                                   margin=dict(t=8,b=40,l=0,r=20))
+            fig_edad.update_layout(**_LAYOUT_TRANSP)
+            fig_edad.update_layout(height=240, xaxis_title=None, yaxis_title="V\u00edctimas", margin=dict(t=8,b=40,l=0,r=20))
             _bar_style(fig_edad, orientation="v")
             st.plotly_chart(fig_edad, use_container_width=True)
 
@@ -389,9 +383,8 @@ with tab_intersec:
                                    COLOR_PRIMARY, COLOR_RIESGO_MEDIO,
                                    COLOR_ACCENT, "#8A9BAA"
                                ], text="n")
-            fig_cross.update_layout(**_LAYOUT_TRANSP, height=240,
-                                    xaxis_title=None, yaxis_title="V\u00edctimas",
-                                    margin=dict(t=8,b=60,l=0,r=20))
+            fig_cross.update_layout(**_LAYOUT_TRANSP)
+            fig_cross.update_layout(height=240, xaxis_title=None, yaxis_title="V\u00edctimas", margin=dict(t=8,b=60,l=0,r=20))
             fig_cross.update_traces(marker_line_width=0, textposition="inside",
                                     textfont=dict(size=10))
             fig_cross.update_xaxes(tickangle=-20,
@@ -434,8 +427,8 @@ with tab_vbg:
                 fig_tvbg = px.bar(df_tvbg.sort_values("n"), x="n", y="tipo",
                                   orientation="h",
                                   color_discrete_sequence=[COLOR_RIESGO_ALTO], text="n")
-                fig_tvbg.update_layout(**_LAYOUT_TRANSP,
-                                       height=max(220, len(df_tvbg)*28+60),
+                fig_tvbg.update_layout(**_LAYOUT_TRANSP)
+                fig_tvbg.update_layout(height=max(220, len(df_tvbg)*28+60),
                                        xaxis_title="V\u00edctimas", yaxis_title=None,
                                        margin=dict(t=8,b=8,l=0,r=48))
                 _bar_style(fig_tvbg)
@@ -454,8 +447,8 @@ with tab_vbg:
                 fig_evbg = px.bar(df_evbg.sort_values("n"), x="n", y="elemento",
                                   orientation="h",
                                   color_discrete_sequence=[COLOR_RIESGO_MEDIO], text="n")
-                fig_evbg.update_layout(**_LAYOUT_TRANSP,
-                                       height=max(220, len(df_evbg)*28+60),
+                fig_evbg.update_layout(**_LAYOUT_TRANSP)
+                fig_evbg.update_layout(height=max(220, len(df_evbg)*28+60),
                                        xaxis_title="V\u00edctimas", yaxis_title=None,
                                        margin=dict(t=8,b=8,l=0,r=48))
                 _bar_style(fig_evbg)
@@ -503,8 +496,8 @@ with tab_resp:
             fig_inst = px.bar(df_inst.sort_values("n"), x="n", y="instancia",
                               orientation="h",
                               color_discrete_sequence=[COLOR_PRIMARY], text="n")
-            fig_inst.update_layout(**_LAYOUT_TRANSP,
-                                   height=max(220, len(df_inst)*30+60),
+            fig_inst.update_layout(**_LAYOUT_TRANSP)
+            fig_inst.update_layout(height=max(220, len(df_inst)*30+60),
                                    xaxis_title="V\u00edctimas", yaxis_title=None,
                                    margin=dict(t=8,b=8,l=0,r=48))
             _bar_style(fig_inst)
@@ -527,8 +520,8 @@ with tab_resp:
                                  COLOR_RIESGO_BAJO, COLOR_RIESGO_MEDIO,
                                  COLOR_RIESGO_ALTO, "#4A9BD4", "#8A9BAA"
                              ], text="n")
-            fig_res.update_layout(**_LAYOUT_TRANSP,
-                                  height=max(220, len(df_res)*30+60),
+            fig_res.update_layout(**_LAYOUT_TRANSP)
+            fig_res.update_layout(height=max(220, len(df_res)*30+60),
                                   xaxis_title="V\u00edctimas", yaxis_title=None,
                                   margin=dict(t=8,b=8,l=0,r=48))
             _bar_style(fig_res)
@@ -619,8 +612,8 @@ with tab_ae:
                 fig_ae_org = px.bar(df_ae_org.sort_values("n"), x="n", y="org",
                                     orientation="h",
                                     color_discrete_sequence=[COLOR_PRIMARY], text="n")
-                fig_ae_org.update_layout(**_LAYOUT_TRANSP,
-                                         height=max(220, len(df_ae_org)*30+60),
+                fig_ae_org.update_layout(**_LAYOUT_TRANSP)
+                fig_ae_org.update_layout(height=max(220, len(df_ae_org)*30+60),
                                          xaxis_title="V\u00edctimas", yaxis_title=None,
                                          margin=dict(t=8,b=8,l=0,r=48))
                 _bar_style(fig_ae_org)
@@ -641,8 +634,8 @@ with tab_ae:
                 fig_ae_nom = px.bar(df_ae_nom.sort_values("n").head(15),
                                     x="n", y="nombre", orientation="h",
                                     color_discrete_sequence=[COLOR_ACCENT], text="n")
-                fig_ae_nom.update_layout(**_LAYOUT_TRANSP,
-                                          height=max(220, min(15, len(df_ae_nom))*30+60),
+                fig_ae_nom.update_layout(**_LAYOUT_TRANSP)
+                fig_ae_nom.update_layout(height=max(220, min(15, len(df_ae_nom))*30+60),
                                           xaxis_title="Incidentes", yaxis_title=None,
                                           margin=dict(t=8,b=8,l=0,r=48))
                 _bar_style(fig_ae_nom)
@@ -662,8 +655,8 @@ with tab_ae:
             fig_ae_ta = px.bar(df_ae_ta.sort_values("n"), x="n", y="tipo",
                                orientation="h",
                                color_discrete_sequence=[COLOR_RIESGO_ALTO], text="n")
-            fig_ae_ta.update_layout(**_LAYOUT_TRANSP,
-                                     height=max(220, len(df_ae_ta)*28+60),
+            fig_ae_ta.update_layout(**_LAYOUT_TRANSP)
+            fig_ae_ta.update_layout(height=max(220, len(df_ae_ta)*28+60),
                                      xaxis_title="Frecuencia", yaxis_title=None,
                                      margin=dict(t=8,b=8,l=0,r=48))
             _bar_style(fig_ae_ta)
