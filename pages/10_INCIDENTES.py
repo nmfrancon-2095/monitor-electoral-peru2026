@@ -14,8 +14,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import (
     APP_TITLE, APP_ICON, APP_CONFIDENTIAL_LABEL, APP_VERSION,
-    COLOR_PRIMARY, COLOR_ACCENT, COLOR_BACKGROUND, COLOR_SURFACE,
-    COLOR_BORDER, COLOR_TEXT_PRIMARY, COLOR_TEXT_SECONDARY, COLOR_TEXT_MUTED,
+    COLOR_PRIMARY, COLOR_ACCENT, COLOR_GOLD, COLOR_BACKGROUND, COLOR_SURFACE,
+    COLOR_BORDER, COLOR_BORDER_STRONG,
+    COLOR_TEXT_PRIMARY, COLOR_TEXT_SECONDARY, COLOR_TEXT_MUTED,
     COLOR_RIESGO_ALTO, COLOR_RIESGO_ALTO_BG,
     COLOR_RIESGO_MEDIO, COLOR_RIESGO_MEDIO_BG,
     COLOR_RIESGO_BAJO, COLOR_RIESGO_BAJO_BG,
@@ -26,6 +27,7 @@ from data_loader_violencia import (
     cargar_datos_violencia, limpiar_cache_violencia, kpis_violencia,
     _explode_multiselect,
 )
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, JsCode
 
 # -------------------------------------------------------
 # SECTION: Page setup
@@ -47,7 +49,8 @@ if not st.session_state.get(_VIO_KEY, False):
     st.markdown(
         "<div style='max-width:420px; margin:60px auto; padding:36px 32px;"
         " background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
-        " border-radius:10px; text-align:center;'>"
+        " border-top:3px solid " + COLOR_RIESGO_ALTO + ";"
+        " border-radius:0; text-align:center;'>"
         "<div style='font-size:0.65rem; font-weight:700; letter-spacing:0.12em;"
         " text-transform:uppercase; color:" + COLOR_RIESGO_ALTO + "; margin-bottom:14px;'>"
         "Acceso restringido \u2014 M\u00f3dulo confidencial</div>"
@@ -89,34 +92,51 @@ kpis = kpis_violencia(df_inc, df_vic)
 col_h, col_btn = st.columns([5, 1])
 with col_h:
     st.markdown(
-        "<div style='margin-bottom:8px;'>"
-        + "<div style='font-size:0.68rem; font-weight:600; letter-spacing:0.08em;"
-        + " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:2px;'>"
-        + "MONITOR ELECTORAL PER\u00da 2026 \u00b7 M\u00f3dulo de Violencia Electoral</div>"
-        + "<div style='font-size:1.55rem; font-weight:700; color:" + COLOR_TEXT_PRIMARY + "; margin:0;'>"
-        + "Incidentes</div>"
-        + "<div style='font-size:0.82rem; color:" + COLOR_TEXT_SECONDARY + "; margin-top:2px;'>"
-        + "Patrones, distribuciones y an\u00e1lisis de incidentes registrados \u00b7 "
-        + APP_VERSION + "</div>"
-        + "</div>",
+        '<div class="page-title-wrap">'
+        + '<div class="page-eyebrow">Monitor Electoral Per\u00fa 2026 \u00b7 M\u00f3dulo de Violencia Electoral</div>'
+        + '<h1 class="page-title">Incidentes</h1>'
+        + '<p style="font-size:0.85rem; color:' + COLOR_TEXT_SECONDARY + '; margin:6px 0 0 0;">'
+        + 'Patrones, distribuciones y an\u00e1lisis de incidentes registrados \u00b7 '
+        + APP_VERSION + '</p>'
+        + '</div>',
         unsafe_allow_html=True,
     )
 with col_btn:
-    st.markdown("<div style='padding-top:24px;'>", unsafe_allow_html=True)
+    st.markdown("<div style='padding-top:32px;'>", unsafe_allow_html=True)
     if st.button("Actualizar datos", use_container_width=True):
         limpiar_cache_violencia()
         st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown(
-    "<div style='border-top:2px solid " + COLOR_BORDER + "; margin-bottom:20px;'></div>",
-    unsafe_allow_html=True,
-)
+# -------------------------------------------------------
+# SECTION: Filtros — rango de fechas + filtros categóricos
+# -------------------------------------------------------
+with st.expander("Filtros", expanded=True):
+    # Fila 1: fechas
+    fecha_min = df_inc["fecha"].min() if "fecha" in df_inc.columns and df_inc["fecha"].notna().any() else None
+    fecha_max = df_inc["fecha"].max() if "fecha" in df_inc.columns and df_inc["fecha"].notna().any() else None
 
-# -------------------------------------------------------
-# SECTION: Filtros
-# -------------------------------------------------------
-with st.expander("Filtros", expanded=False):
+    fd1, fd2 = st.columns(2)
+    with fd1:
+        f_fecha_desde = st.date_input(
+            "Desde",
+            value=fecha_min,
+            min_value=fecha_min,
+            max_value=fecha_max,
+            key="f_fecha_desde",
+        ) if fecha_min else None
+    with fd2:
+        f_fecha_hasta = st.date_input(
+            "Hasta",
+            value=fecha_max,
+            min_value=fecha_min,
+            max_value=fecha_max,
+            key="f_fecha_hasta",
+        ) if fecha_max else None
+
+    st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+
+    # Fila 2: filtros categóricos
     fc1, fc2, fc3, fc4 = st.columns(4)
     with fc1:
         regiones = ["Todas"] + sorted(df_inc["region"].dropna().unique().tolist())
@@ -133,6 +153,10 @@ with st.expander("Filtros", expanded=False):
 
 # Aplicar filtros
 df_f = df_inc.copy()
+if f_fecha_desde and "fecha" in df_f.columns:
+    df_f = df_f[df_f["fecha"] >= pd.Timestamp(f_fecha_desde)]
+if f_fecha_hasta and "fecha" in df_f.columns:
+    df_f = df_f[df_f["fecha"] <= pd.Timestamp(f_fecha_hasta)]
 if f_region != "Todas":
     df_f = df_f[df_f["region"] == f_region]
 if f_subproceso != "Todos":
@@ -147,60 +171,86 @@ if f_verif != "Todos":
 # -------------------------------------------------------
 k1, k2, k3, k4, k5 = st.columns(5)
 
-def _kpi(col, label, value, sub=None, color=COLOR_TEXT_PRIMARY):
+def _kpi(col, label, value, sub=None, color=COLOR_TEXT_PRIMARY, border_color=None):
+    bc = border_color or COLOR_BORDER_STRONG
     with col:
         st.markdown(
             "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
-            " border-radius:6px; padding:16px 18px 14px 18px;'>"
-            "<div style='font-size:0.70rem; font-weight:700; letter-spacing:0.07em;"
-            " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:4px;'>"
+            " border-top:3px solid " + bc + ";"
+            " border-radius:0; padding:16px 18px 14px 18px;'>"
+            "<div style='font-size:0.62rem; font-weight:700; letter-spacing:0.12em;"
+            " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:6px;'>"
             + label + "</div>"
-            "<div style='font-size:1.9rem; font-weight:700; color:" + color + ";"
+            "<div style='font-family:\"Source Serif 4\",Georgia,serif; font-size:2.2rem;"
+            " font-weight:600; color:" + color + ";"
             " font-variant-numeric:tabular-nums; line-height:1.1;'>"
             + str(value) + "</div>"
-            + ("<div style='font-size:0.75rem; color:" + COLOR_TEXT_SECONDARY + "; margin-top:3px;'>"
+            + ("<div style='font-size:0.75rem; color:" + COLOR_TEXT_SECONDARY + "; margin-top:4px;'>"
                + str(sub) + "</div>" if sub else "")
             + "</div>",
             unsafe_allow_html=True,
         )
 
-_kpi(k1, "Total incidentes", len(df_f))
+_kpi(k1, "Total incidentes",   len(df_f),
+     border_color=COLOR_PRIMARY)
 _kpi(k2, "Con fuente directa",
      df_f["estado_verificacion"].str.contains("Fuente Directa", case=False, na=False).sum()
      if "estado_verificacion" in df_f.columns else 0,
-     "verificaci\u00f3n primaria")
+     "verificaci\u00f3n primaria",
+     border_color=COLOR_RIESGO_BAJO)
 _kpi(k3, "Por verificar",
      df_f["estado_verificacion"].str.contains("Por Verificar", case=False, na=False).sum()
      if "estado_verificacion" in df_f.columns else 0,
      "pendientes",
-     COLOR_RIESGO_ALTO)
+     color=COLOR_RIESGO_ALTO, border_color=COLOR_RIESGO_ALTO)
 _kpi(k4, "Con seguimiento OACNUDH",
      df_f["acciones_seguimiento"].notna().sum() if "acciones_seguimiento" in df_f.columns else 0,
-     "incidentes con acci\u00f3n registrada")
+     "incidentes con acci\u00f3n registrada",
+     border_color=COLOR_RIESGO_MEDIO)
 _kpi(k5, "Regiones afectadas",
      df_f["region"].dropna().nunique(),
-     "regiones distintas")
+     "regiones distintas",
+     border_color=COLOR_ACCENT)
 
-st.markdown("<div style='margin-top:24px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top:28px;'></div>", unsafe_allow_html=True)
 
 # -------------------------------------------------------
-# SECTION: Helper — layout base sin fondo para gráficos
-# Sobreescribe paper_bgcolor y plot_bgcolor de CHART_LAYOUT_BASE
-# para que los gráficos floten sobre el fondo de la página.
+# SECTION: Helper — layout base transparente para gráficos
 # -------------------------------------------------------
 _LAYOUT_TRANSP = {k: v for k, v in CHART_LAYOUT_BASE.items()}
 _LAYOUT_TRANSP["paper_bgcolor"] = "rgba(0,0,0,0)"
 _LAYOUT_TRANSP["plot_bgcolor"]  = "rgba(0,0,0,0)"
+_LAYOUT_TRANSP["font"] = dict(family="'DM Sans', system-ui, sans-serif",
+                               size=11, color="#45556A")
 
-# -------------------------------------------------------
-# SECTION: Fila 1 — línea de tiempo + sub-proceso electoral
-# -------------------------------------------------------
+def _apply_bar_style(fig, orientation="h"):
+    """Aplica estilo v3 a cualquier gráfico de barras."""
+    fig.update_traces(
+        marker_line_width=0,
+        textposition="outside",
+        textfont=dict(size=10, family="'DM Sans', sans-serif", color="#45556A"),
+        cliponaxis=False,
+    )
+    ax_common = dict(
+        showgrid=False, showline=False, zeroline=False,
+        tickfont=dict(size=10, family="'DM Sans', sans-serif"),
+    )
+    if orientation == "h":
+        fig.update_xaxes(**ax_common, showticklabels=False, title_font=dict(size=11))
+        fig.update_yaxes(**ax_common, title=None)
+    else:
+        fig.update_xaxes(**ax_common, tickangle=-30)
+        fig.update_yaxes(**ax_common, showgrid=True,
+                         gridcolor="#E5E1D6", gridwidth=1)
+    return fig
+
 row1_l, row1_r = st.columns([3, 2], gap="medium")
 
 with row1_l:
     st.markdown(
-        "<div class='section-header'>Incidentes por semana</div>"
-        "<div class='section-subheader'>Evoluci\u00f3n temporal del n\u00famero de incidentes registrados</div>",
+        '<div class="page-eyebrow">Distribuci\u00f3n temporal</div>'
+        '<div class="section-header">Incidentes por semana</div>'
+        '<div class="section-subheader">Evoluci\u00f3n temporal del n\u00famero de incidentes registrados</div>',
         unsafe_allow_html=True,
     )
     if "fecha" in df_f.columns and df_f["fecha"].notna().any():
@@ -218,20 +268,21 @@ with row1_l:
             height=CHART_HEIGHT_SMALL,
             xaxis_title=None, yaxis_title="Incidentes",
             bargap=0.25,
+            margin=dict(t=8, b=40, l=0, r=40),
         )
-        fig_tiempo.update_traces(
-            marker_line_width=0,
-            textposition="outside",
-            textfont_size=10,
-        )
+        _apply_bar_style(fig_tiempo, orientation="v")
+        fig_tiempo.update_xaxes(showticklabels=True, tickangle=-45,
+                                tickfont=dict(size=9))
+        fig_tiempo.update_yaxes(showgrid=True, gridcolor="#E5E1D6")
         st.plotly_chart(fig_tiempo, use_container_width=True)
     else:
         st.info("Sin datos de fecha disponibles.")
 
 with row1_r:
     st.markdown(
-        "<div class='section-header'>Sub-proceso electoral</div>"
-        "<div class='section-subheader'>Distribuci\u00f3n por tipo de competencia afectada</div>",
+        '<div class="page-eyebrow">Proceso electoral</div>'
+        '<div class="section-header">Sub-proceso electoral</div>'
+        '<div class="section-subheader">Distribuci\u00f3n por tipo de competencia afectada</div>',
         unsafe_allow_html=True,
     )
     if "subproceso_electoral" in df_f.columns:
@@ -247,23 +298,22 @@ with row1_r:
             **_LAYOUT_TRANSP,
             height=CHART_HEIGHT_SMALL,
             xaxis_title="Incidentes", yaxis_title=None,
+            margin=dict(t=8, b=8, l=0, r=48),
         )
-        fig_sub.update_traces(
-            marker_line_width=0,
-            textposition="outside",
-            textfont_size=10,
-        )
+        _apply_bar_style(fig_sub, orientation="h")
         st.plotly_chart(fig_sub, use_container_width=True)
 
 # -------------------------------------------------------
-# SECTION: Fila 2 — tipos de ataque (explode) + forma de ataque (barras verticales)
+# SECTION: Fila 2 — tipos de ataque + forma de ataque
 # -------------------------------------------------------
+st.markdown("<div style='margin-top:8px;'></div>", unsafe_allow_html=True)
 row2_l, row2_r = st.columns([2, 2], gap="medium")
 
 with row2_l:
     st.markdown(
-        "<div class='section-header'>Tipos de ataque</div>"
-        "<div class='section-subheader'>Un incidente puede tener m\u00faltiples tipos</div>",
+        '<div class="page-eyebrow">Tipolog\u00eda</div>'
+        '<div class="section-header">Tipos de ataque</div>'
+        '<div class="section-subheader">Un incidente puede tener m\u00faltiples tipos</div>',
         unsafe_allow_html=True,
     )
     if "tipo_ataque" in df_f.columns and df_f["tipo_ataque"].notna().any():
@@ -278,28 +328,24 @@ with row2_l:
         )
         fig_tipos.update_layout(
             **_LAYOUT_TRANSP,
-            height=max(280, len(df_tipos) * 28 + 60),
+            height=max(300, len(df_tipos) * 26 + 60),
             xaxis_title="Frecuencia", yaxis_title=None,
+            margin=dict(t=8, b=8, l=0, r=48),
         )
-        fig_tipos.update_traces(
-            marker_line_width=0,
-            textposition="outside",
-            textfont_size=10,
-        )
+        _apply_bar_style(fig_tipos, orientation="h")
         st.plotly_chart(fig_tipos, use_container_width=True)
 
 with row2_r:
     st.markdown(
-        "<div class='section-header'>Forma de ataque</div>"
-        "<div class='section-subheader'>Modalidad a nivel del incidente</div>",
+        '<div class="page-eyebrow">Modalidad</div>'
+        '<div class="section-header">Forma de ataque</div>'
+        '<div class="section-subheader">Modalidad a nivel del incidente</div>',
         unsafe_allow_html=True,
     )
     if "forma_ataque" in df_f.columns and df_f["forma_ataque"].notna().any():
         serie_forma = _explode_multiselect(df_f, "forma_ataque")
         df_forma = serie_forma.value_counts().reset_index()
         df_forma.columns = ["forma", "n"]
-
-        # CAMBIO: pie chart → barras verticales (mejor comparabilidad entre categorías)
         fig_forma = px.bar(
             df_forma.sort_values("n", ascending=False),
             x="forma", y="n",
@@ -309,30 +355,23 @@ with row2_r:
         fig_forma.update_layout(
             **_LAYOUT_TRANSP,
             height=CHART_HEIGHT_SMALL,
-            xaxis_title=None,
-            yaxis_title="Frecuencia",
+            xaxis_title=None, yaxis_title="Frecuencia",
+            margin=dict(t=8, b=60, l=0, r=20),
         )
-        fig_forma.update_xaxes(
-            tickangle=-30,
-            tickfont=dict(size=10),
-            showgrid=False,
-        )
-        fig_forma.update_traces(
-            marker_line_width=0,
-            textposition="outside",
-            textfont_size=10,
-        )
+        _apply_bar_style(fig_forma, orientation="v")
         st.plotly_chart(fig_forma, use_container_width=True)
 
 # -------------------------------------------------------
 # SECTION: Fila 3 — presunto autor + distribución regional
 # -------------------------------------------------------
+st.markdown("<div style='margin-top:8px;'></div>", unsafe_allow_html=True)
 row3_l, row3_r = st.columns([2, 2], gap="medium")
 
 with row3_l:
     st.markdown(
-        "<div class='section-header'>Presunto autor</div>"
-        "<div class='section-subheader'>Tipo y sub-tipo del agresor presunto</div>",
+        '<div class="page-eyebrow">Responsabilidad</div>'
+        '<div class="section-header">Presunto autor</div>'
+        '<div class="section-subheader">Tipo y sub-tipo del agresor presunto</div>',
         unsafe_allow_html=True,
     )
     if "autor_tipo" in df_f.columns and df_f["autor_tipo"].notna().any():
@@ -357,18 +396,16 @@ with row3_l:
             height=CHART_HEIGHT_SMALL,
             showlegend=False,
             xaxis_title="Incidentes", yaxis_title=None,
+            margin=dict(t=8, b=8, l=0, r=48),
         )
-        fig_autor.update_traces(
-            marker_line_width=0,
-            textposition="outside",
-            textfont_size=10,
-        )
+        _apply_bar_style(fig_autor, orientation="h")
         st.plotly_chart(fig_autor, use_container_width=True)
 
 with row3_r:
     st.markdown(
-        "<div class='section-header'>Distribuci\u00f3n regional</div>"
-        "<div class='section-subheader'>Incidentes por regi\u00f3n (con geograf\u00eda registrada)</div>",
+        '<div class="page-eyebrow">Geograf\u00eda</div>'
+        '<div class="section-header">Distribuci\u00f3n regional</div>'
+        '<div class="section-subheader">Incidentes por regi\u00f3n (con geograf\u00eda registrada)</div>',
         unsafe_allow_html=True,
     )
     if "region" in df_f.columns and df_f["region"].notna().any():
@@ -384,18 +421,15 @@ with row3_r:
             **_LAYOUT_TRANSP,
             height=CHART_HEIGHT_SMALL,
             xaxis_title="Incidentes", yaxis_title=None,
+            margin=dict(t=8, b=8, l=0, r=48),
         )
-        fig_reg.update_traces(
-            marker_line_width=0,
-            textposition="outside",
-            textfont_size=10,
-        )
+        _apply_bar_style(fig_reg, orientation="h")
         st.plotly_chart(fig_reg, use_container_width=True)
 
         sin_geo = df_f["region"].isna().sum()
         if sin_geo > 0:
             st.markdown(
-                "<div class='nota-info'>"
+                "<div class='nota-card' style='border-left:3px solid " + COLOR_ACCENT + ";'>"
                 + str(sin_geo)
                 + " incidentes sin regi\u00f3n registrada"
                 " (incidentes online o ubicaci\u00f3n no disponible)."
@@ -404,36 +438,79 @@ with row3_r:
             )
 
 # -------------------------------------------------------
-# SECTION: Listado de incidentes — tabla clickeable + panel de detalle
-#
-# Patrón idéntico a 2_CANDIDATOS.py:
-#   1. Tabla con st.dataframe y columna "num_serie" como selector
-#   2. st.selectbox para elegir el incidente
-#   3. Panel de detalle se despliega debajo al seleccionar
+# SECTION: Listado de incidentes — AgGrid clickeable v3
+# Al hacer clic en una fila la ficha se despliega abajo.
 # -------------------------------------------------------
-st.markdown("<div style='margin-top:12px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
 st.markdown(
-    "<div class='section-header'>Listado de incidentes</div>"
-    "<div class='section-subheader'>"
-    "Selecciona un incidente de la tabla para ver su ficha completa"
-    "</div>",
+    '<div class="page-eyebrow">Explorador</div>'
+    '<div class="section-header">Listado de incidentes</div>'
+    '<div class="section-subheader">Haz clic en una fila para ver la ficha completa y las v\u00edctimas asociadas</div>',
     unsafe_allow_html=True,
 )
 
-# Construir tabla de selección
+# CSS v3 para la tabla
+AGGRID_CSS_INC = {
+    ".ag-theme-alpine, .ag-theme-streamlit": {
+        "--ag-background-color": "#FFFFFF",
+        "--ag-odd-row-background-color": "#FFFFFF",
+        "--ag-header-background-color": "#F7F5F0",
+        "--ag-border-color": "#DAD6CC",
+        "--ag-foreground-color": "#0E1B26",
+        "--ag-secondary-foreground-color": "#45556A",
+        "--ag-row-hover-color": "#F2F1EC",
+        "--ag-selected-row-background-color": "#EBF0F8",
+        "--ag-font-family": "'DM Sans', system-ui, sans-serif",
+        "--ag-font-size": "13px",
+        "--ag-border-radius": "0px",
+        "--ag-alpine-active-color": "#0B2545",
+    },
+    ".ag-header": {"border-bottom": "2px solid #0B2545 !important"},
+    ".ag-header-cell-text": {
+        "font-size": "0.62rem !important",
+        "font-weight": "700 !important",
+        "letter-spacing": "0.12em !important",
+        "text-transform": "uppercase !important",
+        "color": "#7A7366 !important",
+    },
+    ".ag-row": {"border-bottom": "1px solid #E5E1D6 !important"},
+    ".ag-row-selected": {"border-left": "3px solid #0B2545 !important"},
+    ".ag-root-wrapper": {
+        "border": "1px solid #DAD6CC !important",
+        "border-radius": "0 !important",
+    },
+}
+
+verif_renderer = JsCode("""
+class VerifRenderer {
+    init(params) {
+        this.eGui = document.createElement('span');
+        const v = (params.value || '').toLowerCase();
+        let bg = '#EEEFEC', color = '#4B5A6B', border = '#B8C4CC';
+        if (v.includes('fuente directa')) { bg='#EDF5EF'; color='#1B5E3A'; border='#90C4A0'; }
+        else if (v.includes('por verificar')) { bg='#FBF1F1'; color='#8E1B1B'; border='#C9A0A0'; }
+        this.eGui.innerHTML = params.value || '\u2014';
+        Object.assign(this.eGui.style, {
+            display:'inline-block', padding:'2px 8px', fontSize:'0.65rem',
+            fontWeight:'700', letterSpacing:'0.08em', textTransform:'uppercase',
+            background:bg, color:color, border:'1px solid '+border, borderRadius:'0',
+        });
+    }
+    getGui() { return this.eGui; }
+}
+""")
+
 cols_tabla = [c for c in ["num_serie", "fecha", "region", "tipo_ataque",
                            "forma_ataque", "subproceso_electoral",
                            "autor_tipo", "estado_verificacion"]
               if c in df_f.columns]
-
 df_tabla = df_f[cols_tabla].copy()
 if "fecha" in df_tabla.columns:
     df_tabla["fecha"] = df_tabla["fecha"].dt.strftime("%d/%m/%Y")
 
-# Labels de columna legibles
 label_map = {
     "num_serie":            "N\u00b0 serie",
-    "fecha":                "Fecha",
+    "fecha":                "+ Fecha",
     "region":               "Regi\u00f3n",
     "tipo_ataque":          "Tipo de ataque",
     "forma_ataque":         "Forma",
@@ -442,152 +519,187 @@ label_map = {
     "estado_verificacion":  "Verificaci\u00f3n",
 }
 df_tabla = df_tabla.rename(columns={c: label_map.get(c, c) for c in df_tabla.columns})
-st.dataframe(df_tabla, use_container_width=True, height=300)
 
-# Selector de incidente (usa num_serie como clave)
-series_disponibles = df_f["num_serie"].dropna().unique().tolist() \
-    if "num_serie" in df_f.columns else []
+gb_inc = GridOptionsBuilder.from_dataframe(df_tabla)
+gb_inc.configure_default_column(resizable=True, sortable=True, filter=True)
+gb_inc.configure_column("N\u00b0 serie",    maxWidth=90)
+gb_inc.configure_column("+ Fecha",          maxWidth=110)
+gb_inc.configure_column("Regi\u00f3n",      minWidth=110)
+gb_inc.configure_column("Tipo de ataque",   minWidth=240, flex=2)
+gb_inc.configure_column("Forma",            minWidth=110)
+gb_inc.configure_column("Sub-proceso",      minWidth=140)
+gb_inc.configure_column("Autor (tipo)",     minWidth=130)
+gb_inc.configure_column("Verificaci\u00f3n", minWidth=150,
+    cellRenderer=verif_renderer)
+gb_inc.configure_selection(selection_mode="single", use_checkbox=False)
+gb_inc.configure_grid_options(rowHeight=36, headerHeight=40)
 
-if not series_disponibles:
-    st.info("No hay incidentes disponibles con los filtros aplicados.")
-else:
-    # Inicializar sesión si no existe
-    if "incidente_sel" not in st.session_state:
-        st.session_state["incidente_sel"] = None
+grid_resp = AgGrid(
+    df_tabla,
+    gridOptions=gb_inc.build(),
+    update_mode=GridUpdateMode.SELECTION_CHANGED,
+    allow_unsafe_jscode=True,
+    height=360,
+    theme="alpine",
+    custom_css=AGGRID_CSS_INC,
+    key="grid_incidentes",
+)
 
-    serie_sel = st.selectbox(
-        "Selecciona un incidente para ver su ficha completa",
-        options=["— Selecciona un incidente —"] + series_disponibles,
-        key="incidente_sel_box",
-    )
+# -------------------------------------------------------
+# SECTION: Ficha del incidente — se activa al hacer clic
+# -------------------------------------------------------
+selected = grid_resp.get("selected_rows")
+if selected is not None and len(selected) > 0:
+    sel_row  = selected[0] if isinstance(selected, list) else selected.iloc[0]
+    # Recuperar num_serie original (antes del rename)
+    serie_label = sel_row.get("N\u00b0 serie") or sel_row.get("num_serie")
+    row_sel = df_f[df_f["num_serie"] == serie_label]
 
-    # -------------------------------------------------------
-    # SECTION: Panel de ficha de incidente
-    # Se despliega debajo de la tabla al seleccionar un número de serie.
-    # -------------------------------------------------------
-    if serie_sel != "— Selecciona un incidente —":
-        row_sel = df_f[df_f["num_serie"] == serie_sel]
-        if row_sel.empty:
-            st.warning("No se encontraron datos para este incidente.")
-        else:
-            row = row_sel.iloc[0]
+    if not row_sel.empty:
+        row = row_sel.iloc[0]
+        fecha_disp  = row["fecha"].strftime("%d/%m/%Y") if pd.notna(row.get("fecha")) else "\u2014"
+        region_disp = str(row.get("region") or "Sin regi\u00f3n registrada")
+        tipo_disp   = str(row.get("tipo_ataque") or "\u2014")
 
-            fecha_disp  = row["fecha"].strftime("%d/%m/%Y") \
-                          if pd.notna(row.get("fecha")) else "\u2014"
-            region_disp = str(row.get("region") or "Sin regi\u00f3n registrada")
-            tipo_disp   = str(row.get("tipo_ataque") or "\u2014")
+        st.markdown(
+            "<div style='border-top:3px solid " + COLOR_PRIMARY + "; margin:24px 0 20px 0;'></div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            '<div class="page-eyebrow">Ficha del incidente</div>'
+            + '<h2 class="profile-name">'
+            + str(serie_label) + " \u00b7 " + fecha_disp
+            + '</h2>'
+            + '<p class="profile-meta">'
+            + region_disp + " \u00b7 " + tipo_disp
+            + '</p>',
+            unsafe_allow_html=True,
+        )
 
+        col_desc, col_meta = st.columns([3, 2], gap="medium")
+
+        with col_desc:
+            descripcion = str(row.get("descripcion") or "Sin descripci\u00f3n registrada.")
             st.markdown(
-                "<div style='border-top:2px solid " + COLOR_BORDER + "; margin:24px 0 20px 0;'></div>",
+                "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
+                " border-top:2px solid " + COLOR_PRIMARY + ";"
+                " border-radius:0; padding:20px 22px;'>"
+                "<div style='font-size:0.60rem; font-weight:700; letter-spacing:0.12em;"
+                " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:10px;'>"
+                "Descripci\u00f3n de los hechos</div>"
+                "<div style='font-size:0.85em; color:" + COLOR_TEXT_SECONDARY + ";"
+                " line-height:1.65; white-space:pre-wrap;'>"
+                + descripcion
+                + "</div></div>",
+                unsafe_allow_html=True,
+            )
+            st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
+            fuentes_html = row.get("fuentes_html", "Sin fuentes registradas.")
+            st.markdown(
+                "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
+                " border-top:2px solid " + COLOR_ACCENT + ";"
+                " border-radius:0; padding:18px 22px;'>"
+                "<div style='font-size:0.60rem; font-weight:700; letter-spacing:0.12em;"
+                " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:10px;'>"
+                "Fuentes</div>"
+                "<div style='font-size:0.83em; color:" + COLOR_TEXT_SECONDARY + "; line-height:1.7;'>"
+                + str(fuentes_html)
+                + "</div></div>",
                 unsafe_allow_html=True,
             )
 
-            # Encabezado del incidente
-            st.markdown(
-                "<div style='margin-bottom:20px;'>"
-                "<div style='font-size:0.63rem; font-weight:700; letter-spacing:0.12em;"
-                " text-transform:uppercase; color:" + COLOR_ACCENT + "; margin-bottom:6px;'>"
-                "Ficha del incidente</div>"
-                "<div style='font-size:1.35rem; font-weight:700; color:" + COLOR_TEXT_PRIMARY + ";"
-                " margin:0 0 4px 0; letter-spacing:-0.02em; line-height:1.2;'>"
-                + str(serie_sel) + " \u00b7 " + fecha_disp + "</div>"
-                "<div style='font-size:0.85rem; color:" + COLOR_TEXT_SECONDARY + "; margin:0;'>"
-                + region_disp + " \u00b7 " + tipo_disp
-                + "</div>"
-                "</div>",
-                unsafe_allow_html=True,
-            )
-
-            col_desc, col_meta = st.columns([3, 2], gap="medium")
-
-            # --- Descripción y fuentes ---
-            with col_desc:
-                descripcion = str(row.get("descripcion") or "Sin descripci\u00f3n registrada.")
-                st.markdown(
-                    "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
-                    " border-radius:8px; padding:20px 22px;'>"
-                    "<div style='font-size:0.60rem; font-weight:700; letter-spacing:0.10em;"
-                    " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:10px;'>"
-                    "Descripci\u00f3n de los hechos</div>"
-                    "<div style='font-size:0.85em; color:" + COLOR_TEXT_SECONDARY + ";"
-                    " line-height:1.65; white-space:pre-wrap;'>"
-                    + descripcion
-                    + "</div>"
-                    "</div>",
-                    unsafe_allow_html=True,
-                )
-                st.markdown("<div style='margin-top:12px;'></div>", unsafe_allow_html=True)
-                fuentes_html = row.get("fuentes_html", "Sin fuentes registradas.")
-                st.markdown(
-                    "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
-                    " border-radius:8px; padding:18px 22px;'>"
-                    "<div style='font-size:0.60rem; font-weight:700; letter-spacing:0.10em;"
-                    " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:10px;'>"
-                    "Fuentes</div>"
-                    "<div style='font-size:0.83em; color:" + COLOR_TEXT_SECONDARY + "; line-height:1.7;'>"
-                    + fuentes_html
-                    + "</div>"
-                    "</div>",
-                    unsafe_allow_html=True,
-                )
-
-            # --- Metadatos y seguimiento ---
-            with col_meta:
-                campos_meta = [
-                    ("Lugar",            row.get("lugar")),
-                    ("Provincia",        row.get("provincia")),
-                    ("Distrito",         row.get("distrito")),
-                    ("Forma de ataque",  row.get("forma_ataque")),
-                    ("Proceso",          row.get("proceso_electoral")),
-                    ("Sub-proceso",      row.get("subproceso_electoral")),
-                    ("Autor (tipo)",     row.get("autor_tipo")),
-                    ("Autor (subtipo)",  row.get("autor_subtipo")),
-                    ("N\u00b0 agresores", row.get("num_agresores")),
-                    ("Verificaci\u00f3n", row.get("estado_verificacion")),
-                ]
-                filas_meta = ""
-                for label, val in campos_meta:
-                    if pd.notna(val) and str(val).strip() and str(val) not in ("nan", "None"):
-                        filas_meta += (
-                            "<tr>"
-                            "<td style='color:" + COLOR_TEXT_MUTED + "; padding-right:14px;"
-                            " white-space:nowrap; font-weight:500; padding-bottom:4px;"
-                            " vertical-align:top;'>" + label + "</td>"
-                            "<td style='color:" + COLOR_TEXT_PRIMARY + "; padding-bottom:4px;"
-                            " line-height:1.45;'>" + str(val) + "</td>"
-                            "</tr>"
-                        )
-
-                st.markdown(
-                    "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
-                    " border-radius:8px; padding:20px 22px;'>"
-                    "<div style='font-size:0.60rem; font-weight:700; letter-spacing:0.10em;"
-                    " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:14px;'>"
-                    "Datos del incidente</div>"
-                    "<table style='width:100%; border-collapse:collapse; font-size:0.84rem; line-height:1.7;'>"
-                    + filas_meta +
-                    "</table>"
-                    "</div>",
-                    unsafe_allow_html=True,
-                )
-
-                # Seguimiento OACNUDH (si existe)
-                seguimiento = row.get("acciones_seguimiento")
-                if pd.notna(seguimiento) and str(seguimiento).strip():
-                    st.markdown("<div style='margin-top:12px;'></div>", unsafe_allow_html=True)
-                    st.markdown(
-                        "<div style='background:" + COLOR_RIESGO_BAJO_BG + ";"
-                        " border-left:3px solid " + COLOR_RIESGO_BAJO + ";"
-                        " border-radius:0 6px 6px 0; padding:14px 16px;'>"
-                        "<div style='font-size:0.60rem; font-weight:700; letter-spacing:0.10em;"
-                        " text-transform:uppercase; color:" + COLOR_RIESGO_BAJO + "; margin-bottom:6px;'>"
-                        "Seguimiento OACNUDH</div>"
-                        "<div style='font-size:0.83em; color:" + COLOR_TEXT_SECONDARY + "; line-height:1.55;'>"
-                        + str(seguimiento) +
-                        "</div>"
-                        "</div>",
-                        unsafe_allow_html=True,
+        with col_meta:
+            campos_meta = [
+                ("Lugar",             row.get("lugar")),
+                ("Provincia",         row.get("provincia")),
+                ("Distrito",          row.get("distrito")),
+                ("Forma de ataque",   row.get("forma_ataque")),
+                ("Proceso",           row.get("proceso_electoral")),
+                ("Sub-proceso",       row.get("subproceso_electoral")),
+                ("Autor (tipo)",      row.get("autor_tipo")),
+                ("Autor (subtipo)",   row.get("autor_subtipo")),
+                ("N\u00b0 agresores", row.get("num_agresores")),
+                ("Verificaci\u00f3n", row.get("estado_verificacion")),
+            ]
+            filas_meta = ""
+            for label_m, val in campos_meta:
+                if pd.notna(val) and str(val).strip() and str(val) not in ("nan", "None"):
+                    filas_meta += (
+                        "<tr>"
+                        "<td style='color:" + COLOR_TEXT_MUTED + "; padding-right:14px;"
+                        " white-space:nowrap; font-weight:500; padding-bottom:5px;"
+                        " vertical-align:top; font-size:0.82rem;'>" + label_m + "</td>"
+                        "<td style='color:" + COLOR_TEXT_PRIMARY + "; padding-bottom:5px;"
+                        " line-height:1.45; font-size:0.84rem;'>" + str(val) + "</td>"
+                        "</tr>"
                     )
+            st.markdown(
+                "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
+                " border-top:2px solid " + COLOR_BORDER_STRONG + ";"
+                " border-radius:0; padding:20px 22px;'>"
+                "<div style='font-size:0.60rem; font-weight:700; letter-spacing:0.12em;"
+                " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:14px;'>"
+                "Datos del incidente</div>"
+                "<table style='width:100%; border-collapse:collapse;'>"
+                + filas_meta +
+                "</table></div>",
+                unsafe_allow_html=True,
+            )
+            seguimiento = row.get("acciones_seguimiento")
+            if pd.notna(seguimiento) and str(seguimiento).strip():
+                st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
+                st.markdown(
+                    "<div style='background:" + COLOR_RIESGO_BAJO_BG + ";"
+                    " border-left:3px solid " + COLOR_RIESGO_BAJO + ";"
+                    " border-radius:0; padding:14px 16px;'>"
+                    "<div style='font-size:0.60rem; font-weight:700; letter-spacing:0.12em;"
+                    " text-transform:uppercase; color:" + COLOR_RIESGO_BAJO + "; margin-bottom:6px;'>"
+                    "Seguimiento OACNUDH</div>"
+                    "<div style='font-size:0.83em; color:" + COLOR_TEXT_SECONDARY + "; line-height:1.55;'>"
+                    + str(seguimiento) + "</div></div>",
+                    unsafe_allow_html=True,
+                )
+
+        # --- Víctimas asociadas (colapsable) ---
+        id_inc = row.get("id") or row.get("num_serie")
+        vic_asociadas = pd.DataFrame()
+        if "id_incidente_join" in df_joined.columns and id_inc is not None:
+            vic_asociadas = df_joined[df_joined["id_incidente_join"] == id_inc].copy()
+        elif "num_serie_incidente" in df_joined.columns and id_inc is not None:
+            vic_asociadas = df_joined[
+                df_joined["num_serie_incidente"] == str(id_inc)
+            ].copy()
+
+        n_vic = len(vic_asociadas)
+        with st.expander(
+            f"\U0001f465 V\u00edctimas asociadas a este incidente ({n_vic})",
+            expanded=(n_vic > 0),
+        ):
+            if n_vic == 0:
+                st.markdown(
+                    "<div class='nota-card' style='border-left:3px solid " + COLOR_BORDER_STRONG + ";'>"
+                    "No hay v\u00edctimas registradas para este incidente."
+                    "</div>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                cols_vic = [c for c in [
+                    "nombre_victima", "tipo_victima", "factor_diferencial",
+                    "identidad_genero", "cargo_postula", "partido",
+                ] if c in vic_asociadas.columns]
+                df_vic_disp = vic_asociadas[cols_vic].copy()
+                label_vic = {
+                    "nombre_victima":    "Nombre / ID",
+                    "tipo_victima":      "Tipo",
+                    "factor_diferencial":"Factor diferencial",
+                    "identidad_genero":  "G\u00e9nero",
+                    "cargo_postula":     "Cargo que postula",
+                    "partido":           "Partido / Movimiento",
+                }
+                df_vic_disp = df_vic_disp.rename(
+                    columns={c: label_vic.get(c, c) for c in df_vic_disp.columns}
+                )
+                st.dataframe(df_vic_disp, use_container_width=True, hide_index=True)
 
 # -------------------------------------------------------
 # SECTION: Footer
