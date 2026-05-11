@@ -14,8 +14,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import (
     APP_TITLE, APP_ICON, APP_CONFIDENTIAL_LABEL, APP_VERSION,
-    COLOR_PRIMARY, COLOR_ACCENT, COLOR_BACKGROUND, COLOR_SURFACE,
-    COLOR_BORDER, COLOR_TEXT_PRIMARY, COLOR_TEXT_SECONDARY, COLOR_TEXT_MUTED,
+    COLOR_PRIMARY, COLOR_ACCENT, COLOR_GOLD, COLOR_BACKGROUND, COLOR_SURFACE,
+    COLOR_BORDER, COLOR_BORDER_STRONG,
+    COLOR_TEXT_PRIMARY, COLOR_TEXT_SECONDARY, COLOR_TEXT_MUTED,
     COLOR_RIESGO_ALTO, COLOR_RIESGO_ALTO_BG,
     COLOR_RIESGO_MEDIO, COLOR_RIESGO_MEDIO_BG,
     COLOR_RIESGO_BAJO, COLOR_RIESGO_BAJO_BG,
@@ -59,29 +60,21 @@ kpis = kpis_violencia(df_inc, df_vic)
 col_h, col_btn = st.columns([5, 1])
 with col_h:
     st.markdown(
-        "<div style='margin-bottom:8px;'>"
-        + "<div style='font-size:0.68rem; font-weight:600; letter-spacing:0.08em;"
-        + " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:2px;'>"
-        + "MONITOR ELECTORAL PER\u00da 2026 \u00b7 M\u00f3dulo de Violencia Electoral</div>"
-        + "<div style='font-size:1.55rem; font-weight:700; color:" + COLOR_TEXT_PRIMARY + "; margin:0;'>"
-        + "Presuntas v\u00edctimas</div>"
-        + "<div style='font-size:0.82rem; color:" + COLOR_TEXT_SECONDARY + "; margin-top:2px;'>"
-        + "Perfiles, interseccionalidad y respuesta institucional \u00b7 "
-        + APP_VERSION + "</div>"
-        + "</div>",
+        '<div class="page-title-wrap">'
+        + '<div class="page-eyebrow">Monitor Electoral Per\u00fa 2026 \u00b7 M\u00f3dulo de Violencia Electoral</div>'
+        + '<h1 class="page-title">Presuntas v\u00edctimas</h1>'
+        + '<p style="font-size:0.85rem; color:' + COLOR_TEXT_SECONDARY + '; margin:6px 0 0 0;">'
+        + 'Perfiles, interseccionalidad y respuesta institucional \u00b7 '
+        + APP_VERSION + '</p>'
+        + '</div>',
         unsafe_allow_html=True,
     )
 with col_btn:
-    st.markdown("<div style='padding-top:24px;'>", unsafe_allow_html=True)
+    st.markdown("<div style='padding-top:32px;'>", unsafe_allow_html=True)
     if st.button("Actualizar datos", use_container_width=True):
         limpiar_cache_violencia()
         st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
-
-st.markdown(
-    "<div style='border-top:2px solid " + COLOR_BORDER + "; margin-bottom:20px;'></div>",
-    unsafe_allow_html=True,
-)
 
 # -------------------------------------------------------
 # SECTION: Filtros
@@ -120,18 +113,21 @@ if f_factor != "Todos":
 # -------------------------------------------------------
 k1, k2, k3, k4, k5 = st.columns(5)
 
-def _kpi(col, label, value, sub=None, color=COLOR_TEXT_PRIMARY):
+def _kpi(col, label, value, sub=None, color=COLOR_TEXT_PRIMARY, border_color=None):
+    bc = border_color or COLOR_BORDER_STRONG
     with col:
         st.markdown(
             "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
-            " border-radius:6px; padding:16px 18px 14px 18px;'>"
-            "<div style='font-size:0.70rem; font-weight:700; letter-spacing:0.07em;"
-            " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:4px;'>"
+            " border-top:3px solid " + bc + ";"
+            " border-radius:0; padding:16px 18px 14px 18px;'>"
+            "<div style='font-size:0.62rem; font-weight:700; letter-spacing:0.12em;"
+            " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:6px;'>"
             + label + "</div>"
-            "<div style='font-size:1.9rem; font-weight:700; color:" + color + ";"
+            "<div style='font-family:\"Source Serif 4\",Georgia,serif; font-size:2.2rem;"
+            " font-weight:600; color:" + color + ";"
             " font-variant-numeric:tabular-nums; line-height:1.1;'>"
             + str(value) + "</div>"
-            + ("<div style='font-size:0.75rem; color:" + COLOR_TEXT_SECONDARY + "; margin-top:3px;'>"
+            + ("<div style='font-size:0.75rem; color:" + COLOR_TEXT_SECONDARY + "; margin-top:4px;'>"
                + str(sub) + "</div>" if sub else "")
             + "</div>",
             unsafe_allow_html=True,
@@ -145,35 +141,58 @@ n_factor       = df_vf["tiene_factor_diferencial"].sum() \
 n_sin_denuncia = (df_vf["instancia_denuncia"] == "No se ha hecho una denuncia/reporte formal").sum() \
                   if "instancia_denuncia" in df_vf.columns else 0
 
-_kpi(k1, "Total v\u00edctimas", n_vf)
-_kpi(k2, "Candidatas/os", n_candidatas,
-     f"{round(n_candidatas/n_vf*100,1) if n_vf else 0}% del total")
-_kpi(k3, "Con indicadores VBG", n_vbg,
+_kpi(k1, "Total v\u00edctimas",       n_vf,
+     border_color=COLOR_PRIMARY)
+_kpi(k2, "Candidatas/os",            n_candidatas,
+     f"{round(n_candidatas/n_vf*100,1) if n_vf else 0}% del total",
+     border_color=COLOR_ACCENT)
+_kpi(k3, "Con indicadores VBG",      n_vbg,
      f"{round(n_vbg/n_vf*100,1) if n_vf else 0}% del total",
-     COLOR_RIESGO_ALTO)
-_kpi(k4, "Con factor diferencial", n_factor,
-     f"{round(n_factor/n_vf*100,1) if n_vf else 0}% del total")
-_kpi(k5, "Sin denuncia formal", n_sin_denuncia,
+     color=COLOR_RIESGO_ALTO, border_color=COLOR_RIESGO_ALTO)
+_kpi(k4, "Con factor diferencial",   n_factor,
+     f"{round(n_factor/n_vf*100,1) if n_vf else 0}% del total",
+     border_color=COLOR_BORDER_STRONG)
+_kpi(k5, "Sin denuncia formal",      n_sin_denuncia,
      f"{round(n_sin_denuncia/n_vf*100,1) if n_vf else 0}% del total",
-     COLOR_RIESGO_MEDIO)
+     color=COLOR_RIESGO_MEDIO, border_color=COLOR_RIESGO_MEDIO)
 
-st.markdown("<div style='margin-top:24px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top:28px;'></div>", unsafe_allow_html=True)
 
 # -------------------------------------------------------
-# SECTION: Helper — layout base sin fondo para gráficos
+# SECTION: Helper — layout transparente + estilo de barras v3
 # -------------------------------------------------------
 _LAYOUT_TRANSP = {k: v for k, v in CHART_LAYOUT_BASE.items()}
 _LAYOUT_TRANSP["paper_bgcolor"] = "rgba(0,0,0,0)"
 _LAYOUT_TRANSP["plot_bgcolor"]  = "rgba(0,0,0,0)"
+_LAYOUT_TRANSP["font"] = dict(family="'DM Sans', system-ui, sans-serif",
+                               size=11, color="#45556A")
+
+def _bar_style(fig, orientation="h"):
+    fig.update_traces(
+        marker_line_width=0,
+        textposition="outside",
+        textfont=dict(size=10, family="'DM Sans', sans-serif", color="#45556A"),
+        cliponaxis=False,
+    )
+    ax = dict(showgrid=False, showline=False, zeroline=False,
+              tickfont=dict(size=10, family="'DM Sans', sans-serif"))
+    if orientation == "h":
+        fig.update_xaxes(**ax, showticklabels=False, title_font=dict(size=11))
+        fig.update_yaxes(**ax, title=None)
+    else:
+        fig.update_xaxes(**ax, tickangle=-30)
+        fig.update_yaxes(**ax, showgrid=True, gridcolor="#E5E1D6", gridwidth=1)
+    return fig
 
 # -------------------------------------------------------
 # SECTION: Tabs de análisis
 # -------------------------------------------------------
-tab_perfil, tab_intersec, tab_vbg, tab_resp = st.tabs([
+tab_perfil, tab_intersec, tab_vbg, tab_resp, tab_ae = st.tabs([
     "Perfil predominante",
     "Interseccionalidad",
     "Violencia de g\u00e9nero",
     "Respuesta institucional",
+    "\U0001f3db Autoridades electorales",
 ])
 
 # --- TAB 1: Perfil predominante ---
@@ -182,109 +201,103 @@ with tab_perfil:
 
     with r1c1:
         st.markdown(
-            "<div class='section-header'>Tipo de v\u00edctima</div>"
-            "<div class='section-subheader'>Individual, colectivo u organizaci\u00f3n</div>",
+            '<div class="page-eyebrow">Tipolog\u00eda</div>'
+            '<div class="section-header">Tipo de v\u00edctima</div>'
+            '<div class="section-subheader">Individual, colectivo u organizaci\u00f3n</div>',
             unsafe_allow_html=True,
         )
         if "tipo_victima" in df_vf.columns:
             df_tv = df_vf["tipo_victima"].value_counts().reset_index()
             df_tv.columns = ["tipo", "n"]
-            fig_tv = px.bar(df_tv.sort_values("n"),
-                            x="n", y="tipo", orientation="h",
-                            color_discrete_sequence=[COLOR_PRIMARY],
-                            text="n")
-            fig_tv.update_layout(**_LAYOUT_TRANSP,
-                                 height=220, xaxis_title="V\u00edctimas",
-                                 yaxis_title=None, showlegend=False)
-            fig_tv.update_traces(marker_line_width=0,
-                                 textposition="outside", textfont_size=10)
+            fig_tv = px.bar(df_tv.sort_values("n"), x="n", y="tipo", orientation="h",
+                            color_discrete_sequence=[COLOR_PRIMARY], text="n")
+            fig_tv.update_layout(**_LAYOUT_TRANSP, height=220,
+                                 xaxis_title="V\u00edctimas", yaxis_title=None,
+                                 showlegend=False, margin=dict(t=8,b=8,l=0,r=48))
+            _bar_style(fig_tv)
             st.plotly_chart(fig_tv, use_container_width=True)
 
     with r1c2:
         st.markdown(
-            "<div class='section-header'>Factor diferencial</div>"
-            "<div class='section-subheader'>Perfil de riesgo espec\u00edfico de la v\u00edctima</div>",
+            '<div class="page-eyebrow">Perfil de riesgo</div>'
+            '<div class="section-header">Factor diferencial</div>'
+            '<div class="section-subheader">Perfil de riesgo espec\u00edfico de la v\u00edctima</div>',
             unsafe_allow_html=True,
         )
         if "factor_diferencial" in df_vf.columns:
             serie_fd = _explode_multiselect(df_vf, "factor_diferencial")
             df_fd = serie_fd.value_counts().reset_index()
             df_fd.columns = ["factor", "n"]
-            fig_fd = px.bar(df_fd.sort_values("n"),
-                            x="n", y="factor", orientation="h",
-                            color_discrete_sequence=[COLOR_ACCENT],
-                            text="n")
+            fig_fd = px.bar(df_fd.sort_values("n"), x="n", y="factor", orientation="h",
+                            color_discrete_sequence=[COLOR_ACCENT], text="n")
             fig_fd.update_layout(**_LAYOUT_TRANSP,
-                                 height=max(220, len(df_fd)*30+60),
-                                 xaxis_title="V\u00edctimas", yaxis_title=None)
-            fig_fd.update_traces(marker_line_width=0,
-                                 textposition="outside", textfont_size=10)
+                                 height=max(220, len(df_fd)*28+60),
+                                 xaxis_title="V\u00edctimas", yaxis_title=None,
+                                 margin=dict(t=8,b=8,l=0,r=48))
+            _bar_style(fig_fd)
             st.plotly_chart(fig_fd, use_container_width=True)
 
     r2c1, r2c2 = st.columns(2, gap="medium")
     with r2c1:
         st.markdown(
-            "<div class='section-header'>Cargo que postula</div>"
-            "<div class='section-subheader'>Solo v\u00edctimas candidatas</div>",
+            '<div class="page-eyebrow">Candidaturas</div>'
+            '<div class="section-header">Cargo que postula</div>'
+            '<div class="section-subheader">Solo v\u00edctimas candidatas</div>',
             unsafe_allow_html=True,
         )
         if "cargo_postula" in df_vf.columns:
             df_cargo = df_vf["cargo_postula"].dropna().value_counts().reset_index()
             df_cargo.columns = ["cargo", "n"]
             if not df_cargo.empty:
-                fig_cargo = px.bar(df_cargo.sort_values("n"),
-                                   x="n", y="cargo", orientation="h",
-                                   color_discrete_sequence=["#4A9BD4"],
-                                   text="n")
-                fig_cargo.update_layout(**_LAYOUT_TRANSP,
-                                        height=220, xaxis_title="V\u00edctimas",
-                                        yaxis_title=None)
-                fig_cargo.update_traces(marker_line_width=0,
-                                        textposition="outside", textfont_size=10)
+                fig_cargo = px.bar(df_cargo.sort_values("n"), x="n", y="cargo",
+                                   orientation="h",
+                                   color_discrete_sequence=["#4A9BD4"], text="n")
+                fig_cargo.update_layout(**_LAYOUT_TRANSP, height=220,
+                                        xaxis_title="V\u00edctimas", yaxis_title=None,
+                                        margin=dict(t=8,b=8,l=0,r=48))
+                _bar_style(fig_cargo)
                 st.plotly_chart(fig_cargo, use_container_width=True)
             else:
                 st.info("No hay v\u00edctimas candidatas en la selecci\u00f3n actual.")
 
     with r2c2:
         st.markdown(
-            "<div class='section-header'>Partido / movimiento</div>"
-            "<div class='section-subheader'>Afiliaci\u00f3n pol\u00edtica de las v\u00edctimas</div>",
+            '<div class="page-eyebrow">Afiliaci\u00f3n</div>'
+            '<div class="section-header">Partido / movimiento</div>'
+            '<div class="section-subheader">Afiliaci\u00f3n pol\u00edtica de las v\u00edctimas</div>',
             unsafe_allow_html=True,
         )
         if "org_politica" in df_vf.columns:
             df_part = df_vf["org_politica"].dropna().value_counts().reset_index()
             df_part.columns = ["partido", "n"]
             if not df_part.empty:
-                fig_part = px.bar(df_part.sort_values("n"),
-                                  x="n", y="partido", orientation="h",
-                                  color_discrete_sequence=["#6B4FA0"],
-                                  text="n")
+                fig_part = px.bar(df_part.sort_values("n"), x="n", y="partido",
+                                  orientation="h",
+                                  color_discrete_sequence=["#6B4FA0"], text="n")
                 fig_part.update_layout(**_LAYOUT_TRANSP,
-                                       height=max(220, len(df_part)*30+60),
-                                       xaxis_title="V\u00edctimas", yaxis_title=None)
-                fig_part.update_traces(marker_line_width=0,
-                                       textposition="outside", textfont_size=10)
+                                       height=max(220, len(df_part)*28+60),
+                                       xaxis_title="V\u00edctimas", yaxis_title=None,
+                                       margin=dict(t=8,b=8,l=0,r=48))
+                _bar_style(fig_part)
                 st.plotly_chart(fig_part, use_container_width=True)
 
-    # Objetivo político
     st.markdown(
-        "<div class='section-header' style='margin-top:8px;'>Objetivo pol\u00edtico aparente</div>"
-        "<div class='section-subheader'>Finalidad del ataque seg\u00fan an\u00e1lisis contextual</div>",
+        '<div class="page-eyebrow" style="margin-top:8px;">Finalidad</div>'
+        '<div class="section-header">Objetivo pol\u00edtico aparente</div>'
+        '<div class="section-subheader">Finalidad del ataque seg\u00fan an\u00e1lisis contextual</div>',
         unsafe_allow_html=True,
     )
     if "objetivo_politico" in df_vf.columns:
         serie_obj = _explode_multiselect(df_vf, "objetivo_politico")
         df_obj = serie_obj.value_counts().reset_index()
         df_obj.columns = ["objetivo", "n"]
-        fig_obj = px.bar(df_obj.sort_values("n"),
-                         x="n", y="objetivo", orientation="h",
-                         color_discrete_sequence=[COLOR_RIESGO_ALTO],
-                         text="n")
+        fig_obj = px.bar(df_obj.sort_values("n"), x="n", y="objetivo", orientation="h",
+                         color_discrete_sequence=[COLOR_RIESGO_ALTO], text="n")
         fig_obj.update_layout(**_LAYOUT_TRANSP,
-                              height=max(220, len(df_obj)*30+60),
-                              xaxis_title="V\u00edctimas", yaxis_title=None)
-        fig_obj.update_traces(marker_line_width=0,
-                              textposition="outside", textfont_size=10)
+                              height=max(220, len(df_obj)*28+60),
+                              xaxis_title="V\u00edctimas", yaxis_title=None,
+                              margin=dict(t=8,b=8,l=0,r=48))
+        _bar_style(fig_obj)
         st.plotly_chart(fig_obj, use_container_width=True)
 
 # --- TAB 2: Interseccionalidad ---
@@ -293,7 +306,8 @@ with tab_intersec:
 
     with ti1:
         st.markdown(
-            "<div class='section-header'>Identidad de g\u00e9nero</div>",
+            '<div class="page-eyebrow">Identidad</div>'
+            '<div class="section-header">Identidad de g\u00e9nero</div>',
             unsafe_allow_html=True,
         )
         if "genero" in df_vf.columns:
@@ -305,57 +319,62 @@ with tab_intersec:
                 "Femenino":                COLOR_RIESGO_MEDIO,
                 "No binario/gender queer": COLOR_ACCENT,
                 "Sin dato":                "#8A9BAA",
+                "Otra":                    "#C9A227",
             }
-            fig_gen = px.pie(df_gen, names="genero", values="n",
-                             color="genero", color_discrete_map=color_gen, hole=0.4)
-            fig_gen.update_layout(**_LAYOUT_TRANSP, height=260)
-            fig_gen.update_traces(textinfo="percent+label", textfont_size=11)
+            # Barra horizontal — más legible y sin labels apilados
+            fig_gen = px.bar(df_gen.sort_values("n"), x="n", y="genero",
+                             orientation="h", color="genero",
+                             color_discrete_map=color_gen, text="n")
+            fig_gen.update_layout(**_LAYOUT_TRANSP, height=220,
+                                  xaxis_title="V\u00edctimas", yaxis_title=None,
+                                  showlegend=True,
+                                  legend=dict(orientation="h", y=-0.2, x=0),
+                                  margin=dict(t=8,b=40,l=0,r=48))
+            _bar_style(fig_gen)
             st.plotly_chart(fig_gen, use_container_width=True)
 
     with ti2:
         st.markdown(
-            "<div class='section-header'>Identidad \u00e9tnica</div>",
+            '<div class="page-eyebrow">Identidad</div>'
+            '<div class="section-header">Identidad \u00e9tnica</div>',
             unsafe_allow_html=True,
         )
         if "etnia" in df_vf.columns:
             df_etnia = df_vf["etnia"].value_counts(dropna=False).reset_index()
             df_etnia.columns = ["etnia", "n"]
             df_etnia["etnia"] = df_etnia["etnia"].fillna("Sin dato")
-            fig_etnia = px.bar(df_etnia.sort_values("n"),
-                               x="n", y="etnia", orientation="h",
-                               color_discrete_sequence=["#1E8A4A"],
-                               text="n")
-            fig_etnia.update_layout(**_LAYOUT_TRANSP,
-                                    height=260, xaxis_title="V\u00edctimas",
-                                    yaxis_title=None)
-            fig_etnia.update_traces(marker_line_width=0,
-                                    textposition="outside", textfont_size=10)
+            fig_etnia = px.bar(df_etnia.sort_values("n"), x="n", y="etnia",
+                               orientation="h",
+                               color_discrete_sequence=["#1E8A4A"], text="n")
+            fig_etnia.update_layout(**_LAYOUT_TRANSP, height=260,
+                                    xaxis_title="V\u00edctimas", yaxis_title=None,
+                                    margin=dict(t=8,b=8,l=0,r=48))
+            _bar_style(fig_etnia)
             st.plotly_chart(fig_etnia, use_container_width=True)
 
     ti3, ti4 = st.columns(2, gap="medium")
     with ti3:
         st.markdown(
-            "<div class='section-header'>Rango de edad</div>",
+            '<div class="page-eyebrow">Edad</div>'
+            '<div class="section-header">Rango de edad</div>',
             unsafe_allow_html=True,
         )
         if "edad" in df_vf.columns:
             df_edad = df_vf["edad"].value_counts(dropna=False).reset_index()
             df_edad.columns = ["edad", "n"]
             df_edad["edad"] = df_edad["edad"].fillna("Sin dato")
-            fig_edad = px.bar(df_edad.sort_values("edad"),
-                              x="edad", y="n",
-                              color_discrete_sequence=[COLOR_ACCENT],
-                              text="n")
-            fig_edad.update_layout(**_LAYOUT_TRANSP,
-                                   height=240, xaxis_title=None,
-                                   yaxis_title="V\u00edctimas")
-            fig_edad.update_traces(marker_line_width=0,
-                                   textposition="outside", textfont_size=10)
+            fig_edad = px.bar(df_edad.sort_values("edad"), x="edad", y="n",
+                              color_discrete_sequence=[COLOR_ACCENT], text="n")
+            fig_edad.update_layout(**_LAYOUT_TRANSP, height=240,
+                                   xaxis_title=None, yaxis_title="V\u00edctimas",
+                                   margin=dict(t=8,b=40,l=0,r=20))
+            _bar_style(fig_edad, orientation="v")
             st.plotly_chart(fig_edad, use_container_width=True)
 
     with ti4:
         st.markdown(
-            "<div class='section-header'>G\u00e9nero \u00d7 tipo de v\u00edctima</div>",
+            '<div class="page-eyebrow">Cruce</div>'
+            '<div class="section-header">G\u00e9nero \u00d7 tipo de v\u00edctima</div>',
             unsafe_allow_html=True,
         )
         if "genero" in df_vf.columns and "tipo_victima" in df_vf.columns:
@@ -368,21 +387,23 @@ with tab_intersec:
                                color_discrete_sequence=[
                                    COLOR_PRIMARY, COLOR_RIESGO_MEDIO,
                                    COLOR_ACCENT, "#8A9BAA"
-                               ],
-                               text="n")
-            fig_cross.update_layout(**_LAYOUT_TRANSP,
-                                    height=240, xaxis_title=None,
-                                    yaxis_title="V\u00edctimas")
-            fig_cross.update_traces(marker_line_width=0,
-                                    textposition="inside", textfont_size=10)
+                               ], text="n")
+            fig_cross.update_layout(**_LAYOUT_TRANSP, height=240,
+                                    xaxis_title=None, yaxis_title="V\u00edctimas",
+                                    margin=dict(t=8,b=60,l=0,r=20))
+            fig_cross.update_traces(marker_line_width=0, textposition="inside",
+                                    textfont=dict(size=10))
+            fig_cross.update_xaxes(tickangle=-20,
+                                   tickfont=dict(size=10, family="'DM Sans', sans-serif"),
+                                   showgrid=False)
+            fig_cross.update_yaxes(showgrid=True, gridcolor="#E5E1D6")
             st.plotly_chart(fig_cross, use_container_width=True)
 
-    # Personas trans
     if "es_trans" in df_vf.columns:
         n_trans = (df_vf["es_trans"] == "Si").sum()
         if n_trans > 0:
             st.markdown(
-                "<div class='nota-warning'>"
+                "<div class='nota-card' style='border-left:3px solid " + COLOR_RIESGO_MEDIO + ";'>"
                 + str(n_trans)
                 + " v\u00edctima(s) son personas transg\u00e9nero. "
                   "Este dato es relevante para el an\u00e1lisis de patrones de discriminaci\u00f3n por prejuicio."
@@ -401,47 +422,47 @@ with tab_vbg:
 
         with vb1:
             st.markdown(
-                "<div class='section-header'>Tipo de violencia espec\u00edfica</div>",
+                '<div class="page-eyebrow">VBG</div>'
+                '<div class="section-header">Tipo de violencia espec\u00edfica</div>',
                 unsafe_allow_html=True,
             )
             if "tipo_vbg" in df_vbg.columns:
                 serie_vbg = _explode_multiselect(df_vbg, "tipo_vbg")
                 df_tvbg = serie_vbg.value_counts().reset_index()
                 df_tvbg.columns = ["tipo", "n"]
-                fig_tvbg = px.bar(df_tvbg.sort_values("n"),
-                                  x="n", y="tipo", orientation="h",
-                                  color_discrete_sequence=[COLOR_RIESGO_ALTO],
-                                  text="n")
+                fig_tvbg = px.bar(df_tvbg.sort_values("n"), x="n", y="tipo",
+                                  orientation="h",
+                                  color_discrete_sequence=[COLOR_RIESGO_ALTO], text="n")
                 fig_tvbg.update_layout(**_LAYOUT_TRANSP,
-                                       height=max(220, len(df_tvbg)*30+60),
-                                       xaxis_title="V\u00edctimas", yaxis_title=None)
-                fig_tvbg.update_traces(marker_line_width=0,
-                                       textposition="outside", textfont_size=10)
+                                       height=max(220, len(df_tvbg)*28+60),
+                                       xaxis_title="V\u00edctimas", yaxis_title=None,
+                                       margin=dict(t=8,b=8,l=0,r=48))
+                _bar_style(fig_tvbg)
                 st.plotly_chart(fig_tvbg, use_container_width=True)
 
         with vb2:
             st.markdown(
-                "<div class='section-header'>Elementos vinculados a VBG</div>",
+                '<div class="page-eyebrow">VBG</div>'
+                '<div class="section-header">Elementos vinculados a VBG</div>',
                 unsafe_allow_html=True,
             )
             if "elementos_vbg" in df_vbg.columns:
                 serie_evbg = _explode_multiselect(df_vbg, "elementos_vbg")
                 df_evbg = serie_evbg.value_counts().reset_index()
                 df_evbg.columns = ["elemento", "n"]
-                fig_evbg = px.bar(df_evbg.sort_values("n"),
-                                  x="n", y="elemento", orientation="h",
-                                  color_discrete_sequence=[COLOR_RIESGO_MEDIO],
-                                  text="n")
+                fig_evbg = px.bar(df_evbg.sort_values("n"), x="n", y="elemento",
+                                  orientation="h",
+                                  color_discrete_sequence=[COLOR_RIESGO_MEDIO], text="n")
                 fig_evbg.update_layout(**_LAYOUT_TRANSP,
-                                       height=max(220, len(df_evbg)*30+60),
-                                       xaxis_title="V\u00edctimas", yaxis_title=None)
-                fig_evbg.update_traces(marker_line_width=0,
-                                       textposition="outside", textfont_size=10)
+                                       height=max(220, len(df_evbg)*28+60),
+                                       xaxis_title="V\u00edctimas", yaxis_title=None,
+                                       margin=dict(t=8,b=8,l=0,r=48))
+                _bar_style(fig_evbg)
                 st.plotly_chart(fig_evbg, use_container_width=True)
 
-        # Tabla VBG
         st.markdown(
-            "<div class='section-header' style='margin-top:8px;'>V\u00edctimas con VBG</div>",
+            '<div class="page-eyebrow" style="margin-top:8px;">Listado</div>'
+            '<div class="section-header">V\u00edctimas con VBG</div>',
             unsafe_allow_html=True,
         )
         cols_vbg_tabla = [c for c in ["nombre", "genero", "es_trans", "cargo_postula",
@@ -460,8 +481,7 @@ with tab_vbg:
             df_vbg[cols_vbg_tabla].rename(
                 columns={c: label_map_vbg.get(c, c) for c in cols_vbg_tabla}
             ),
-            use_container_width=True,
-            height=280,
+            use_container_width=True, height=280, hide_index=True,
         )
 
 # --- TAB 4: Respuesta institucional ---
@@ -470,53 +490,53 @@ with tab_resp:
 
     with tr1:
         st.markdown(
-            "<div class='section-header'>Instancia de denuncia</div>"
-            "<div class='section-subheader'>\u00bfD\u00f3nde report\u00f3 la v\u00edctima?</div>",
+            '<div class="page-eyebrow">Denuncia</div>'
+            '<div class="section-header">Instancia de denuncia</div>'
+            '<div class="section-subheader">\u00bfD\u00f3nde report\u00f3 la v\u00edctima?</div>',
             unsafe_allow_html=True,
         )
         if "instancia_denuncia" in df_vf.columns:
             serie_inst = _explode_multiselect(df_vf, "instancia_denuncia")
             df_inst = serie_inst.value_counts().reset_index()
             df_inst.columns = ["instancia", "n"]
-            fig_inst = px.bar(df_inst.sort_values("n"),
-                              x="n", y="instancia", orientation="h",
-                              color_discrete_sequence=[COLOR_PRIMARY],
-                              text="n")
+            fig_inst = px.bar(df_inst.sort_values("n"), x="n", y="instancia",
+                              orientation="h",
+                              color_discrete_sequence=[COLOR_PRIMARY], text="n")
             fig_inst.update_layout(**_LAYOUT_TRANSP,
-                                   height=max(220, len(df_inst)*32+60),
-                                   xaxis_title="V\u00edctimas", yaxis_title=None)
-            fig_inst.update_traces(marker_line_width=0,
-                                   textposition="outside", textfont_size=10)
+                                   height=max(220, len(df_inst)*30+60),
+                                   xaxis_title="V\u00edctimas", yaxis_title=None,
+                                   margin=dict(t=8,b=8,l=0,r=48))
+            _bar_style(fig_inst)
             st.plotly_chart(fig_inst, use_container_width=True)
 
     with tr2:
         st.markdown(
-            "<div class='section-header'>Resultado del proceso</div>"
-            "<div class='section-subheader'>Estado de la denuncia o reporte</div>",
+            '<div class="page-eyebrow">Resultado</div>'
+            '<div class="section-header">Resultado del proceso</div>'
+            '<div class="section-subheader">Estado de la denuncia o reporte</div>',
             unsafe_allow_html=True,
         )
         if "resultado_denuncia" in df_vf.columns:
             df_res = df_vf["resultado_denuncia"].value_counts(dropna=False).reset_index()
             df_res.columns = ["resultado", "n"]
             df_res["resultado"] = df_res["resultado"].fillna("Sin dato")
-            # CAMBIO: pie → barras horizontales (más legible con etiquetas largas)
-            fig_res = px.bar(df_res.sort_values("n"),
-                             x="n", y="resultado", orientation="h",
+            fig_res = px.bar(df_res.sort_values("n"), x="n", y="resultado",
+                             orientation="h",
                              color_discrete_sequence=[
                                  COLOR_RIESGO_BAJO, COLOR_RIESGO_MEDIO,
                                  COLOR_RIESGO_ALTO, "#4A9BD4", "#8A9BAA"
-                             ],
-                             text="n")
+                             ], text="n")
             fig_res.update_layout(**_LAYOUT_TRANSP,
-                                  height=max(220, len(df_res)*32+60),
-                                  xaxis_title="V\u00edctimas", yaxis_title=None)
-            fig_res.update_traces(marker_line_width=0,
-                                  textposition="outside", textfont_size=10)
+                                  height=max(220, len(df_res)*30+60),
+                                  xaxis_title="V\u00edctimas", yaxis_title=None,
+                                  margin=dict(t=8,b=8,l=0,r=48))
+            _bar_style(fig_res)
             st.plotly_chart(fig_res, use_container_width=True)
 
     st.markdown(
-        "<div class='section-header' style='margin-top:8px;'>Medidas de protecci\u00f3n adoptadas</div>"
-        "<div class='section-subheader'>V\u00edctimas con alguna medida registrada</div>",
+        '<div class="page-eyebrow" style="margin-top:8px;">Protecci\u00f3n</div>'
+        '<div class="section-header">Medidas de protecci\u00f3n adoptadas</div>'
+        '<div class="section-subheader">V\u00edctimas con alguna medida registrada</div>',
         unsafe_allow_html=True,
     )
     if "medidas_proteccion" in df_vf.columns:
@@ -537,13 +557,157 @@ with tab_resp:
             }
             st.dataframe(
                 df_mp.rename(columns={c: label_map_mp.get(c, c) for c in df_mp.columns}),
-                use_container_width=True,
-                height=280,
+                use_container_width=True, height=280, hide_index=True,
             )
 
-# -------------------------------------------------------
-# SECTION: Footer
-# -------------------------------------------------------
+# --- TAB 5: Autoridades electorales ---
+with tab_ae:
+    FACTOR_AE = "Autoridades Electorales"
+    df_ae = df_vf[
+        df_vf["factor_diferencial"].str.contains(FACTOR_AE, case=False, na=False)
+    ].copy() if "factor_diferencial" in df_vf.columns else pd.DataFrame()
+
+    if df_ae.empty:
+        st.info("No hay víctimas con factor diferencial 'Autoridades Electorales' en la selección actual.")
+    else:
+        # KPIs específicos
+        n_ae = len(df_ae)
+        n_inc_ae = df_ae["num_serie_incidente"].nunique() \
+            if "num_serie_incidente" in df_ae.columns else 0
+        orgs_ae = df_ae["org_politica"].dropna().nunique() \
+            if "org_politica" in df_ae.columns else 0
+
+        ka1, ka2, ka3 = st.columns(3)
+        for col, lbl, val, bc in [
+            (ka1, "Autoridades afectadas",    n_ae,    COLOR_PRIMARY),
+            (ka2, "Incidentes asociados",     n_inc_ae, COLOR_RIESGO_ALTO),
+            (ka3, "Organizaciones afectadas", orgs_ae,  COLOR_ACCENT),
+        ]:
+            with col:
+                st.markdown(
+                    "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
+                    " border-top:3px solid " + bc + ";"
+                    " border-radius:0; padding:16px 18px 14px 18px;'>"
+                    "<div style='font-size:0.62rem; font-weight:700; letter-spacing:0.12em;"
+                    " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:6px;'>"
+                    + lbl + "</div>"
+                    "<div style='font-family:\"Source Serif 4\",Georgia,serif; font-size:2.2rem;"
+                    " font-weight:600; color:" + bc + ";"
+                    " font-variant-numeric:tabular-nums; line-height:1.1;'>"
+                    + str(val) + "</div>"
+                    + "</div>",
+                    unsafe_allow_html=True,
+                )
+
+        st.markdown("<div style='margin-top:24px;'></div>", unsafe_allow_html=True)
+
+        ae1, ae2 = st.columns(2, gap="medium")
+
+        # Gráfico 1 — ataques por organización
+        with ae1:
+            st.markdown(
+                '<div class="page-eyebrow">Organizaci\u00f3n</div>'
+                '<div class="section-header">Ataques por organizaci\u00f3n electoral</div>'
+                '<div class="section-subheader">ONPE, JNE y otras autoridades</div>',
+                unsafe_allow_html=True,
+            )
+            col_org = "org_politica" if "org_politica" in df_ae.columns else None
+            if col_org:
+                df_ae_org = df_ae[col_org].fillna("Sin dato").value_counts().reset_index()
+                df_ae_org.columns = ["org", "n"]
+                fig_ae_org = px.bar(df_ae_org.sort_values("n"), x="n", y="org",
+                                    orientation="h",
+                                    color_discrete_sequence=[COLOR_PRIMARY], text="n")
+                fig_ae_org.update_layout(**_LAYOUT_TRANSP,
+                                         height=max(220, len(df_ae_org)*30+60),
+                                         xaxis_title="V\u00edctimas", yaxis_title=None,
+                                         margin=dict(t=8,b=8,l=0,r=48))
+                _bar_style(fig_ae_org)
+                st.plotly_chart(fig_ae_org, use_container_width=True)
+
+        # Gráfico 2 — ataques por persona
+        with ae2:
+            st.markdown(
+                '<div class="page-eyebrow">Persona</div>'
+                '<div class="section-header">Ataques por autoridad individual</div>'
+                '<div class="section-subheader">Corvetto, Burneo y otras autoridades nominadas</div>',
+                unsafe_allow_html=True,
+            )
+            col_nom = "nombre" if "nombre" in df_ae.columns else None
+            if col_nom:
+                df_ae_nom = df_ae[col_nom].fillna("Sin dato").value_counts().reset_index()
+                df_ae_nom.columns = ["nombre", "n"]
+                fig_ae_nom = px.bar(df_ae_nom.sort_values("n").head(15),
+                                    x="n", y="nombre", orientation="h",
+                                    color_discrete_sequence=[COLOR_ACCENT], text="n")
+                fig_ae_nom.update_layout(**_LAYOUT_TRANSP,
+                                          height=max(220, min(15, len(df_ae_nom))*30+60),
+                                          xaxis_title="Incidentes", yaxis_title=None,
+                                          margin=dict(t=8,b=8,l=0,r=48))
+                _bar_style(fig_ae_nom)
+                st.plotly_chart(fig_ae_nom, use_container_width=True)
+
+        # Gráfico 3 — tipo de ataque recibido
+        st.markdown(
+            '<div class="page-eyebrow">Tipolog\u00eda</div>'
+            '<div class="section-header">Tipos de ataque contra autoridades electorales</div>',
+            unsafe_allow_html=True,
+        )
+        if "tipo_ataque_vic" in df_ae.columns or "tipo_ataque" in df_ae.columns:
+            col_ta = "tipo_ataque_vic" if "tipo_ataque_vic" in df_ae.columns else "tipo_ataque"
+            serie_ae_ta = _explode_multiselect(df_ae, col_ta)
+            df_ae_ta = serie_ae_ta.value_counts().reset_index()
+            df_ae_ta.columns = ["tipo", "n"]
+            fig_ae_ta = px.bar(df_ae_ta.sort_values("n"), x="n", y="tipo",
+                               orientation="h",
+                               color_discrete_sequence=[COLOR_RIESGO_ALTO], text="n")
+            fig_ae_ta.update_layout(**_LAYOUT_TRANSP,
+                                     height=max(220, len(df_ae_ta)*28+60),
+                                     xaxis_title="Frecuencia", yaxis_title=None,
+                                     margin=dict(t=8,b=8,l=0,r=48))
+            _bar_style(fig_ae_ta)
+            st.plotly_chart(fig_ae_ta, use_container_width=True)
+
+        # Tabla detalle — una fila por autoridad con resumen de incidentes
+        st.markdown(
+            '<div class="page-eyebrow" style="margin-top:8px;">Detalle</div>'
+            '<div class="section-header">Resumen por autoridad electoral</div>'
+            '<div class="section-subheader">N\u00famero de ataques y descripciones por persona u organizaci\u00f3n</div>',
+            unsafe_allow_html=True,
+        )
+
+        # Construir resumen agrupado
+        cols_ae_resumen = [c for c in [
+            "nombre", "org_politica", "cargo_postula", "tipo_victima",
+            "genero", "num_serie_incidente", "tipo_ataque_vic",
+        ] if c in df_ae.columns]
+
+        if cols_ae_resumen:
+            df_ae_tabla = df_ae[cols_ae_resumen].copy()
+            lm_ae = {
+                "nombre":              "Nombre / ID",
+                "org_politica":        "Organizaci\u00f3n",
+                "cargo_postula":       "Cargo",
+                "tipo_victima":        "Tipo",
+                "genero":              "G\u00e9nero",
+                "num_serie_incidente": "N\u00b0 incidente",
+                "tipo_ataque_vic":     "Tipo de ataque",
+            }
+            st.dataframe(
+                df_ae_tabla.rename(columns={c: lm_ae.get(c, c) for c in df_ae_tabla.columns}),
+                use_container_width=True,
+                height=min(120 + len(df_ae_tabla) * 35, 400),
+                hide_index=True,
+            )
+
+            # Descarga CSV
+            st.download_button(
+                "\u2b07\ufe0f Descargar tabla (CSV)",
+                data=df_ae_tabla.to_csv(index=False).encode("utf-8"),
+                file_name="autoridades_electorales_ataques.csv",
+                mime="text/csv",
+                key="dl_ae",
+            )
 st.markdown(
     "<div class='page-footer'>"
     "<span>Monitor Electoral Per\u00fa 2026 \u00b7 " + APP_CONFIDENTIAL_LABEL + "</span>"
