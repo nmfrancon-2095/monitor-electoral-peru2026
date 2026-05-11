@@ -217,7 +217,8 @@ st.markdown("<div style='margin-top:28px;'></div>", unsafe_allow_html=True)
 # -------------------------------------------------------
 # SECTION: Helper — layout base transparente para gráficos
 # -------------------------------------------------------
-_LAYOUT_TRANSP = {k: v for k, v in CHART_LAYOUT_BASE.items()}
+_LAYOUT_TRANSP = {k: v for k, v in CHART_LAYOUT_BASE.items()
+                  if k not in ("margin",)}
 _LAYOUT_TRANSP["paper_bgcolor"] = "rgba(0,0,0,0)"
 _LAYOUT_TRANSP["plot_bgcolor"]  = "rgba(0,0,0,0)"
 _LAYOUT_TRANSP["font"] = dict(family="'DM Sans', system-ui, sans-serif",
