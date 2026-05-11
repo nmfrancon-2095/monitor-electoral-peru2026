@@ -549,15 +549,17 @@ with tab_ae:
     if df_ae.empty:
         st.info("No hay v\u00edctimas con factor diferencial 'Autoridades Electorales' en la selecci\u00f3n actual.")
     else:
-        n_ae = len(df_ae)
+        # Personas únicas (no filas/incidentes)
+        col_nom_ae = "nombre" if "nombre" in df_ae.columns else None
+        personas_unicas = df_ae[col_nom_ae].dropna().nunique() if col_nom_ae else len(df_ae)
         n_inc_ae = df_ae["num_serie_incidente"].nunique() if "num_serie_incidente" in df_ae.columns else 0
         orgs_ae = df_ae["org_politica"].dropna().nunique() if "org_politica" in df_ae.columns else 0
 
         ka1, ka2, ka3 = st.columns(3)
         for _col, _lbl, _val, _bc in [
-            (ka1, "Autoridades afectadas",    n_ae,     COLOR_PRIMARY),
-            (ka2, "Incidentes asociados",     n_inc_ae, COLOR_RIESGO_ALTO),
-            (ka3, "Organizaciones afectadas", orgs_ae,  COLOR_ACCENT),
+            (ka1, "Autoridades afectadas",    personas_unicas, COLOR_PRIMARY),
+            (ka2, "Incidentes asociados",     n_inc_ae,        COLOR_RIESGO_ALTO),
+            (ka3, "Organizaciones afectadas", orgs_ae,         COLOR_ACCENT),
         ]:
             with _col:
                 st.markdown(
@@ -638,11 +640,24 @@ with tab_ae:
             lm_ae = {"nombre": "Nombre / ID", "org_politica": "Organizaci\u00f3n",
                      "cargo_postula": "Cargo", "tipo_victima": "Tipo",
                      "genero": "G\u00e9nero", "num_serie_incidente": "N\u00b0 incidente"}
-            df_ae_t = df_ae[cols_ae].copy()
+            # Agrupar por persona — una fila por persona con lista de incidentes
+            grp_cols = [c for c in ["nombre", "org_politica", "cargo_postula",
+                                    "tipo_victima", "genero"] if c in df_ae.columns]
+            if "num_serie_incidente" in df_ae.columns and grp_cols:
+                df_ae_t = (df_ae.groupby(grp_cols, dropna=False)
+                           .agg(n_ataques=("num_serie_incidente", "nunique"),
+                                incidentes=("num_serie_incidente",
+                                            lambda x: ", ".join(sorted(x.dropna().astype(str).unique()))))
+                           .reset_index()
+                           .sort_values("n_ataques", ascending=False))
+                lm_ae["n_ataques"] = "N\u00b0 ataques"
+                lm_ae["incidentes"] = "Incidentes"
+            else:
+                df_ae_t = df_ae[cols_ae].drop_duplicates()
             st.dataframe(
                 df_ae_t.rename(columns={c: lm_ae.get(c, c) for c in df_ae_t.columns}),
                 use_container_width=True,
-                height=min(120 + len(df_ae_t)*35, 400),
+                height=min(120 + len(df_ae_t)*40, 420),
                 hide_index=True,
             )
             st.download_button(
