@@ -234,8 +234,8 @@ with tab_perfil:
                             x="n", y="factor", orientation="h",
                             color_discrete_sequence=[COLOR_ACCENT],
                             text="n")
-            fig_fd.update_layout(**_L(height=max(220, len(df_fd))*30+60),
-                                 xaxis_title="V\u00edctimas", yaxis_title=None)
+            fig_fd.update_layout(**_L(height=max(220, len(df_fd)*30+60),
+                                 xaxis_title="V\u00edctimas", yaxis_title=None))
             fig_fd.update_traces(marker_line_width=0, textposition="outside", cliponaxis=False, textfont=dict(size=10, family="'DM Sans', sans-serif", color="#45556A"))
             st.plotly_chart(fig_fd, use_container_width=True)
 
@@ -274,8 +274,8 @@ with tab_perfil:
                                   x="n", y="partido", orientation="h",
                                   color_discrete_sequence=["#6B4FA0"],
                                   text="n")
-                fig_part.update_layout(**_L(height=max(220, len(df_part))*30+60),
-                                       xaxis_title="V\u00edctimas", yaxis_title=None)
+                fig_part.update_layout(**_L(height=max(220, len(df_part)*30+60),
+                                       xaxis_title="V\u00edctimas", yaxis_title=None))
                 fig_part.update_traces(marker_line_width=0, textposition="outside", cliponaxis=False, textfont=dict(size=10, family="'DM Sans', sans-serif", color="#45556A"))
                 st.plotly_chart(fig_part, use_container_width=True)
 
@@ -293,8 +293,8 @@ with tab_perfil:
                          x="n", y="objetivo", orientation="h",
                          color_discrete_sequence=[COLOR_RIESGO_ALTO],
                          text="n")
-        fig_obj.update_layout(**_L(height=max(220, len(df_obj))*30+60),
-                              xaxis_title="V\u00edctimas", yaxis_title=None)
+        fig_obj.update_layout(**_L(height=max(220, len(df_obj)*30+60),
+                              xaxis_title="V\u00edctimas", yaxis_title=None))
         fig_obj.update_traces(marker_line_width=0, textposition="outside", cliponaxis=False, textfont=dict(size=10, family="'DM Sans', sans-serif", color="#45556A"))
         st.plotly_chart(fig_obj, use_container_width=True)
 
@@ -417,8 +417,8 @@ with tab_vbg:
                                   x="n", y="tipo", orientation="h",
                                   color_discrete_sequence=[COLOR_RIESGO_ALTO],
                                   text="n")
-                fig_tvbg.update_layout(**_L(height=max(220, len(df_tvbg))*30+60),
-                                       xaxis_title="V\u00edctimas", yaxis_title=None)
+                fig_tvbg.update_layout(**_L(height=max(220, len(df_tvbg)*30+60),
+                                       xaxis_title="V\u00edctimas", yaxis_title=None))
                 fig_tvbg.update_traces(marker_line_width=0, textposition="outside", cliponaxis=False, textfont=dict(size=10, family="'DM Sans', sans-serif", color="#45556A"))
                 st.plotly_chart(fig_tvbg, use_container_width=True)
 
@@ -435,8 +435,8 @@ with tab_vbg:
                                   x="n", y="elemento", orientation="h",
                                   color_discrete_sequence=[COLOR_RIESGO_MEDIO],
                                   text="n")
-                fig_evbg.update_layout(**_L(height=max(220, len(df_evbg))*30+60),
-                                       xaxis_title="V\u00edctimas", yaxis_title=None)
+                fig_evbg.update_layout(**_L(height=max(220, len(df_evbg)*30+60),
+                                       xaxis_title="V\u00edctimas", yaxis_title=None))
                 fig_evbg.update_traces(marker_line_width=0, textposition="outside", cliponaxis=False, textfont=dict(size=10, family="'DM Sans', sans-serif", color="#45556A"))
                 st.plotly_chart(fig_evbg, use_container_width=True)
 
@@ -483,8 +483,8 @@ with tab_resp:
                               x="n", y="instancia", orientation="h",
                               color_discrete_sequence=[COLOR_PRIMARY],
                               text="n")
-            fig_inst.update_layout(**_L(height=max(220, len(df_inst))*32+60),
-                                   xaxis_title="V\u00edctimas", yaxis_title=None)
+            fig_inst.update_layout(**_L(height=max(220, len(df_inst)*32+60),
+                                   xaxis_title="V\u00edctimas", yaxis_title=None))
             fig_inst.update_traces(marker_line_width=0, textposition="outside", cliponaxis=False, textfont=dict(size=10, family="'DM Sans', sans-serif", color="#45556A"))
             st.plotly_chart(fig_inst, use_container_width=True)
 
@@ -506,8 +506,8 @@ with tab_resp:
                                  COLOR_RIESGO_ALTO, "#4A9BD4", "#8A9BAA"
                              ],
                              text="n")
-            fig_res.update_layout(**_L(height=max(220, len(df_res))*32+60),
-                                  xaxis_title="V\u00edctimas", yaxis_title=None)
+            fig_res.update_layout(**_L(height=max(220, len(df_res)*32+60),
+                                  xaxis_title="V\u00edctimas", yaxis_title=None))
             fig_res.update_traces(marker_line_width=0, textposition="outside", cliponaxis=False, textfont=dict(size=10, family="'DM Sans', sans-serif", color="#45556A"))
             st.plotly_chart(fig_res, use_container_width=True)
 
