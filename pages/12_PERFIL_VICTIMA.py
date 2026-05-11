@@ -12,14 +12,15 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import (
     APP_TITLE, APP_ICON, APP_CONFIDENTIAL_LABEL, APP_VERSION,
-    COLOR_PRIMARY, COLOR_ACCENT, COLOR_BACKGROUND, COLOR_SURFACE,
-    COLOR_BORDER, COLOR_TEXT_PRIMARY, COLOR_TEXT_SECONDARY, COLOR_TEXT_MUTED,
+    COLOR_PRIMARY, COLOR_ACCENT, COLOR_GOLD, COLOR_BACKGROUND, COLOR_SURFACE,
+    COLOR_BORDER, COLOR_BORDER_STRONG, COLOR_TEXT_PRIMARY, COLOR_TEXT_SECONDARY, COLOR_TEXT_MUTED,
     COLOR_RIESGO_ALTO, COLOR_RIESGO_ALTO_BG,
     COLOR_RIESGO_MEDIO, COLOR_RIESGO_MEDIO_BG,
     COLOR_RIESGO_BAJO, COLOR_RIESGO_BAJO_BG,
     COLOR_RIESGO_NONE, GLOBAL_CSS,
     SCORE_ALTO_MIN, SCORE_MEDIO_MIN,
 )
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, JsCode
 from data_loader_violencia import (
     cargar_datos_violencia, limpiar_cache_violencia, _buscar_candidato,
 )
@@ -62,16 +63,13 @@ with st.spinner("Cargando datos..."):
 col_h, col_btn = st.columns([5, 1])
 with col_h:
     st.markdown(
-        "<div style='margin-bottom:8px;'>"
-        + "<div style='font-size:0.68rem; font-weight:600; letter-spacing:0.08em;"
-        + " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:2px;'>"
-        + "MONITOR ELECTORAL PER\u00da 2026 \u00b7 M\u00f3dulo de Violencia Electoral</div>"
-        + "<div style='font-size:1.55rem; font-weight:700; color:" + COLOR_TEXT_PRIMARY + "; margin:0;'>"
-        + "Perfil de presunta v\u00edctima</div>"
-        + "<div style='font-size:0.82rem; color:" + COLOR_TEXT_SECONDARY + "; margin-top:2px;'>"
-        + "Ficha individual con todos los incidentes asociados y cruce con Monitor Electoral \u00b7 "
-        + APP_VERSION + "</div>"
-        + "</div>",
+        '<div class="page-title-wrap">'
+        + '<div class="page-eyebrow">Monitor Electoral Per\u00fa 2026 \u00b7 M\u00f3dulo de Violencia Electoral</div>'
+        + '<h1 class="page-title">Perfil de presunta v\u00edctima</h1>'
+        + '<p style="font-size:0.85rem; color:' + COLOR_TEXT_SECONDARY + '; margin:6px 0 0 0;">'
+        + 'Ficha individual con todos los incidentes asociados y cruce con Monitor Electoral \u00b7 '
+        + APP_VERSION + '</p>'
+        + '</div>',
         unsafe_allow_html=True,
     )
 with col_btn:
@@ -82,7 +80,7 @@ with col_btn:
     st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown(
-    "<div style='border-top:2px solid " + COLOR_BORDER + "; margin-bottom:20px;'></div>",
+    "<div style='height:4px'></div>",
     unsafe_allow_html=True,
 )
 
@@ -218,7 +216,7 @@ row_vic = df_vic_sel.iloc[0]
 # SECTION: Ficha de la víctima
 # -------------------------------------------------------
 st.markdown(
-    "<div style='border-top:2px solid " + COLOR_BORDER + "; margin:20px 0 16px 0;'></div>",
+    "<div style='border-top:3px solid " + COLOR_PRIMARY + "; margin:20px 0 16px 0;'></div>",
     unsafe_allow_html=True,
 )
 
@@ -230,9 +228,8 @@ vbg_badge      = ("<span class='badge badge-alto' style='margin-left:6px;'>VBG</
                    if row_vic.get("tiene_vbg") else "")
 
 st.markdown(
-    "<div style='margin-bottom:16px;'>"
-    "<div style='font-size:1.35rem; font-weight:700; color:" + COLOR_TEXT_PRIMARY + ";"
-    " margin-bottom:6px;'>" + nombre_display + "</div>"
+    '<div class="page-eyebrow">Perfil de presunta v\u00edctima</div>'
+    + '<h2 class="profile-name">' + nombre_display + '</h2>'
     "<div>" + badge_perfil + " " + badge_tipo + vbg_badge + "</div>"
     "</div>",
     unsafe_allow_html=True,
@@ -499,7 +496,7 @@ with col_incidentes:
             if filas_inc:
                 st.markdown(
                     "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
-                    " border-radius:6px; padding:14px 16px; margin-bottom:10px;'>"
+                    " border-radius:0; border-top:2px solid " + COLOR_PRIMARY + "; padding:14px 16px; margin-bottom:10px;'>"
                     "<table style='width:100%; border-collapse:collapse; font-size:0.83rem;'>"
                     + filas_inc +
                     "</table></div>",
@@ -524,7 +521,7 @@ with col_incidentes:
                 st.markdown(
                     "<div style='background:" + COLOR_RIESGO_BAJO_BG + ";"
                     " border-left:3px solid " + COLOR_RIESGO_BAJO + ";"
-                    " border-radius:0 6px 6px 0; padding:12px 14px; margin-top:10px;'>"
+                    " border-radius:0; padding:12px 14px; margin-top:10px;'>"
                     "<div style='font-size:0.68rem; font-weight:700; letter-spacing:0.06em;"
                     " text-transform:uppercase; color:" + COLOR_RIESGO_BAJO + "; margin-bottom:4px;'>"
                     "Seguimiento OACNUDH</div>"
@@ -543,12 +540,12 @@ es_candidata  = pd.notna(cargo_postula) and str(cargo_postula).strip()
 
 if es_candidata:
     st.markdown(
-        "<div style='border-top:2px solid " + COLOR_BORDER + "; margin:24px 0 16px 0;'></div>",
+        "<div style='border-top:1px solid " + COLOR_BORDER + "; margin:24px 0 16px 0;'></div>",
         unsafe_allow_html=True,
     )
     st.markdown(
         "<div style='font-size:0.75rem; font-weight:700; letter-spacing:0.08em;"
-        " text-transform:uppercase; color:" + COLOR_ACCENT + "; margin-bottom:8px;'>"
+        " text-transform:uppercase; color:" + COLOR_GOLD + "; margin-bottom:8px;'>"
         "Cruce con Monitor Electoral</div>"
         "<div style='font-size:0.82rem; color:" + COLOR_TEXT_SECONDARY + "; margin-bottom:14px;'>"
         "B\u00fasqueda autom\u00e1tica del perfil de candidatura en la base de datos del Monitor Electoral</div>",
@@ -596,7 +593,7 @@ if es_candidata:
         with ce1:
             st.markdown(
                 "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
-                " border-radius:6px; padding:14px 16px; text-align:center;'>"
+                " border-radius:0; border-top:2px solid " + COLOR_BORDER_STRONG + "; padding:14px 16px; text-align:center;'>"
                 "<div style='font-size:0.68rem; font-weight:700; letter-spacing:0.08em;"
                 " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:4px;'>"
                 "Score de riesgo</div>"
@@ -609,7 +606,7 @@ if es_candidata:
         with ce2:
             st.markdown(
                 "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
-                " border-radius:6px; padding:14px 16px; text-align:center;'>"
+                " border-radius:0; border-top:2px solid " + COLOR_BORDER_STRONG + "; padding:14px 16px; text-align:center;'>"
                 "<div style='font-size:0.68rem; font-weight:700; letter-spacing:0.08em;"
                 " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:6px;'>"
                 "Nivel de riesgo</div>"
@@ -623,7 +620,7 @@ if es_candidata:
             region_cand = cand[col_region] if col_region else "—"
             st.markdown(
                 "<div style='background:" + COLOR_SURFACE + "; border:1px solid " + COLOR_BORDER + ";"
-                " border-radius:6px; padding:14px 16px; text-align:center;'>"
+                " border-radius:0; border-top:2px solid " + COLOR_BORDER_STRONG + "; padding:14px 16px; text-align:center;'>"
                 "<div style='font-size:0.68rem; font-weight:700; letter-spacing:0.08em;"
                 " text-transform:uppercase; color:" + COLOR_TEXT_MUTED + "; margin-bottom:4px;'>"
                 "Regi\u00f3n de candidatura</div>"
