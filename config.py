@@ -28,7 +28,10 @@ APP_ICON                = "\U0001f5f3\ufe0f"
 APP_LOGO                = None
 APP_CONFIDENTIAL_LABEL  = "CONFIDENCIAL \u2014 Uso interno"
 APP_VERSION             = "v3.0"
-DATA_FILE               = "data/maestro_dashboard_electoral_v1.xlsx"
+from pathlib import Path
+DATA_FILE               = Path(__file__).parent / "data" / "maestro_dashboard_electoral_v1.xlsx"
+ONPE_FILE               = Path(__file__).parent / "data" / "onpe_resultados_latest.xlsx"
+ONPE_DATA_FILE          = Path(__file__).parent / "data" / "onpe_resultados_latest.xlsx"
 
 # -------------------------------------------------------
 # SECTION: Paleta de colores — v3.0 "Forensic Editorial"
@@ -831,8 +834,6 @@ hr {
 # -------------------------------------------------------
 # SECTION: Datos ONPE — resultados electorales 2026
 # -------------------------------------------------------
-from pathlib import Path
-ONPE_DATA_FILE = Path(__file__).parent / "data" / "onpe_resultados_latest.xlsx"
 
 # -------------------------------------------------------
 # SECTION: Paleta de PARTIDOS POLÍTICOS — v3.0
